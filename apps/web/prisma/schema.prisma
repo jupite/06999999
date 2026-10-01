@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+}
+enum Role {
+  MEMBER
+  OWNER
+}
+enum ContentKind {
+  POST
+  PROJECT
+  PHOTO
+  MUSIC
+  FRIEND_LINK
+}
+enum ReviewState {
+  DRAFT
+  PENDING_AI
+  PENDING_HUMAN
+  PUBLISHED
+  REJECTED
+  WITHDRAWN
+}
+enum RuleEffect {
+  ALLOW
+  DENY
+}
+enum MusicKind {
+  SONG
+  PLAYLIST
+}
+model User {
+  id         String   @id @default(cuid())
+  githubId   String   @unique
+  name       String
+  avatarUrl  String?
+  role       Role     @default(MEMBER)
+  banned     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  permissions PermissionOverride[]
+  quota       StorageQuota?
+  contents    Content[]
+  comments    Comment[]
+  likes       Like[]
+  media       Media[]
+}
+model PermissionOverride {
+  id         String @id @default(cuid())
+  userId     String
+  capability String
+  effect     RuleEffect
+  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, capability])
+}
+model StorageQuota {
+  userId        String @id
+  limitBytes    BigInt @default(0)
+  usedBytes     BigInt @default(0)
+  reservedBytes BigInt @default(0)
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model Content {
+  id          String @id @default(cuid())
+  authorId    String
+  kind        ContentKind
+  slug        String @unique
+  currentVersion Int @default(1)
+  publishedVersion Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User @relation(fields: [authorId], references: [id])
+  revisions   ContentRevision[]
+  comments    Comment[]
+  likes       Like[]
+  @@index([kind, createdAt])
+}
+model ContentRevision {
+  id          String @id @default(cuid())
+  contentId   String
+  version     Int
+  title       String
+  summary     String @default("")
+  markdown    String @default("")
+  targetUrl   String?
+  musicKind   MusicKind?
+  musicSourceId String?
+  state       ReviewState @default(DRAFT)
+  categoryId  String?
+  createdAt   DateTime @default(now())
+  content     Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  category    Category? @relation(fields: [categoryId], references: [id])
+  tags        Tag[]
+  media       Media[]
+  reviews     ModerationReview[]
+  @@unique([contentId, version])
+  @@index([state, createdAt])
+}
+model Category {
+  id        String @id @default(cuid())
+  name      String @unique
+  revisions ContentRevision[]
+}
+model Tag {
+  id        String @id @default(cuid())
+  name      String @unique
+  revisions ContentRevision[]
+}
+model Comment {
+  id        String @id @default(cuid())
+  contentId String
+  authorId  String
+  body      String
+  version   Int @default(1)
+  state     ReviewState @default(PENDING_HUMAN)
+  createdAt DateTime @default(now())
+  author    User @relation(fields: [authorId], references: [id])
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  reviews   ModerationReview[]
+}
+model Like {
+  userId    String
+  contentId String
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  @@id([userId, contentId])
+}
+model Media {
+  id        String @id @default(cuid())
+  ownerId   String
+  storageKey String @unique
+  mimeType  String
+  bytes     BigInt
+  ready     Boolean @default(false)
+  createdAt DateTime @default(now())
+  owner     User @relation(fields: [ownerId], references: [id])
+  revisions ContentRevision[]
+}
+model ProjectSiteRule {
+  id        String @id @default(cuid())
+  hostname  String
+  includeSubdomains Boolean @default(false)
+  effect    RuleEffect @default(ALLOW)
+  enabled   Boolean @default(true)
+  @@unique([hostname, effect])
+}
+model ModerationReview {
+  id        String @id @default(cuid())
+  revisionId String?
+  commentId String?
+  targetVersion Int
+  result    ReviewState
+  reason    String
+  reviewerId String?
+  model     String?
+  ruleVersion String?
+  createdAt DateTime @default(now())
+  revision  ContentRevision? @relation(fields: [revisionId], references: [id])
+  comment   Comment? @relation(fields: [commentId], references: [id])
+}
+model SiteSettings {
+  id        String @id @default("site")
+  title     String @default("未命名的观测站")
+  maxImageBytes BigInt @default(0)
+  totalMediaLimitBytes BigInt @default(0)
+  aiEnabled Boolean @default(false)
+  aiBaseUrl String?
+  aiModel   String?
+  aiEncryptedKey String?
+  moderationRules String @default("")
+  updatedAt DateTime @updatedAt
+}
+model AuditLog {
+  id        String @id @default(cuid())
+  actorId   String
+  action    String
+  targetId  String
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+}
