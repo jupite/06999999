@@ -38,6 +38,8 @@ uv run uvicorn site_api.main:app --app-dir src --host 127.0.0.1 --port 8000
 
 ## GitHub 登录
 
+本地创建 OAuth App、填写环境变量与站主验收步骤见 [GitHub 登录配置](doc/github-oauth-local.md)。
+
 填写 apps/web/.env 中的 GITHUB_CLIENT_ID、GITHUB_CLIENT_SECRET、NEXTAUTH_SECRET、NEXTAUTH_URL 和 OWNER_GITHUB_ID。GitHub OAuth 回调地址使用 `<NEXTAUTH_URL>/api/auth/callback/github`，本地默认 http://localhost:3000/api/auth/callback/github 。OWNER_GITHUB_ID 为稳定的账号数字 ID。
 
 数据库迁移和 OAuth 配置完成前，登录按钮不可用。未执行真实 OAuth 联调。权限检查每次读取账号状态，站主身份来自服务端 OWNER_GITHUB_ID；当前 User.role 字段保留于模型，不能依靠客户端或数据库普通角色修改获得站主身份。
@@ -61,3 +63,14 @@ Python 测试在 apps/python-api 中执行 `uv run pytest`。
 - 音乐 Provider 是共享状态基础，不是已完成的网易云播放器；未接入曲目时控件禁用。
 
 更多决策见 [规划目录](doc/README.md) 和 [开发进度](doc/development-status.md)。不在仓库保存真实服务器资料、密码或 API 密钥。
+
+## 代码格式化
+
+在 VS Code 打开仓库根目录并安装工作区推荐的 Prettier 扩展，即可保存时格式化。规则为 2 空格缩进、双引号、分号、尾随逗号、100 字符行宽和 LF 换行。
+
+```powershell
+pnpm run format
+pnpm run format:check
+```
+
+根目录与 apps/web 均可执行上述命令，处理前端、文档和配置；生成文件、锁文件与 Python 缓存不参与。Python 格式化工具尚未同步到这个 E 盘项目。
