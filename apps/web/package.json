@@ -12,7 +12,9 @@
     "db:validate": "prisma validate",
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "format": "pnpm --workspace-root run format",
+    "format:check": "pnpm --workspace-root run format:check"
   },
   "dependencies": {
     "next": "16.3.8",

@@ -2,7 +2,9 @@
   "name": "homura-personal-site",
   "private": true,
   "packageManager": "pnpm@11.19.0",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "pnpm --filter @site/web dev",
     "build": "pnpm --filter @site/web build",
@@ -12,6 +14,11 @@
     "db:validate": "pnpm --filter @site/web db:validate",
     "db:deploy": "pnpm --filter @site/web db:deploy",
     "db:status": "pnpm --filter @site/web db:status",
-    "db:migrate": "pnpm --filter @site/web db:migrate"
+    "db:migrate": "pnpm --filter @site/web db:migrate",
+    "format": "prettier --write \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
+    "format:check": "prettier --check \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown"
+  },
+  "devDependencies": {
+    "prettier": "3.9.9"
   }
 }
