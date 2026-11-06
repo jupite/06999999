@@ -3,14 +3,15 @@ import { authorize } from "@/server/domain/permissions";
 import Link from "next/link";
 export const dynamic = "force-dynamic";
 export default async function AdminPage() {
-  const access = authorize(await currentActor(), "site.manage");
+  const actor = await currentActor();
+  const access = authorize(actor, "site.manage");
   if (!access.allowed)
     return (
       <section className="panel empty-state">
-        <h1>管理入口</h1>
-        <p>{access.reason}</p>
+        <h1>{actor ? "无管理权限" : "管理入口"}</h1>
+        <p>{actor ? `你已登录，但当前账号无法访问管理后台：${access.reason}。` : access.reason}</p>
         <Link className="button" href="/login">
-          前往登录
+          {actor ? "查看当前账户" : "前往登录"}
         </Link>
       </section>
     );
