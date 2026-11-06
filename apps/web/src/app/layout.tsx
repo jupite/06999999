@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navigation } from "@/components/navigation";
 import { MusicProvider } from "@/components/music-provider";
+import { authConfigured } from "@/server/auth";
 import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "未命名的观测站", template: "%s · 观测站" },
@@ -17,7 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           跳到正文
         </a>
         <MusicProvider>
-          <Navigation />
+          <Navigation authEnabled={authConfigured()} />
           <main id="main" className="site-main">
             {children}
           </main>

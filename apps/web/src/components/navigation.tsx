@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Moon, Github } from "lucide-react";
+import { Moon } from "lucide-react";
+import { AccountMenu } from "./account-menu";
 export const navigation = [
   ["/", "首页"],
   ["/projects", "项目"],
@@ -11,7 +12,7 @@ export const navigation = [
   ["/friends", "友链"],
   ["/about", "关于"],
 ] as const;
-export function Navigation() {
+export function Navigation({ authEnabled }: { authEnabled: boolean }) {
   const pathname = usePathname();
   return (
     <header className="site-header">
@@ -34,10 +35,7 @@ export function Navigation() {
             </Link>
           ))}
         </nav>
-        <Link className="login-link" href="/login">
-          <Github size={16} />
-          <span>登录</span>
-        </Link>
+        <AccountMenu enabled={authEnabled} />
       </div>
     </header>
   );
