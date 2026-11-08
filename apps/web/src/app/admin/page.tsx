@@ -18,7 +18,10 @@ export default async function AdminPage() {
   return (
     <section className="panel empty-state">
       <h1>站点管理</h1>
-      <p>站主身份校验已通过。用户权限、审核、上传额度和 AI 设置面板将在后续内容服务阶段接入。</p>
+      <Link className="button" href="/admin/reviews">
+        文章审核
+      </Link>
+      <p>站主身份校验已通过。文章人工审核已开放；用户权限、上传额度和 AI 设置面板后续接入。</p>
     </section>
   );
 }

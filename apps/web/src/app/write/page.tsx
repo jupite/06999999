@@ -5,6 +5,7 @@ import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { authorize } from "@/server/domain/permissions";
 import { readDraft } from "@/server/services/drafts";
+import { readMyArticle } from "@/server/services/articles";
 export const metadata = { title: "文章草稿" };
 export const dynamic = "force-dynamic";
 export default async function WritePage({
@@ -27,7 +28,19 @@ export default async function WritePage({
     );
   if (id !== undefined && (typeof id !== "string" || !id || id.length > 100)) notFound();
   const draft = id ? await readDraft(getDb(), actor, id) : { version: 0, title: "", markdown: "" };
-  if (!draft) notFound();
+  if (!draft) {
+    const submitted = id ? await readMyArticle(getDb(), actor, id) : null;
+    if (!submitted) notFound();
+    return (
+      <section className="panel empty-state">
+        <h1>这篇文章已提交</h1>
+        <p>当前版本已不在草稿中，请到我的文章查看发布或审核状态。</p>
+        <Link className="button" href={`/my-articles/${submitted.id}`}>
+          查看文章状态
+        </Link>
+      </section>
+    );
+  }
   return (
     <>
       <div className="page-heading">
@@ -37,7 +50,12 @@ export default async function WritePage({
         </h1>
         <p>从一句话开始，不必急着完成。</p>
       </div>
-      <MarkdownEditor key={id ?? "new"} initialDraft={draft} />
+      <MarkdownEditor
+        key={id ?? "new"}
+        initialDraft={draft}
+        owner={actor.role === "OWNER"}
+        canSubmit={authorize(actor, "post.submit").allowed}
+      />
     </>
   );
 }

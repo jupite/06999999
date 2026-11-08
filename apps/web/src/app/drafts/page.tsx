@@ -12,6 +12,7 @@ export default async function DraftsPage() {
     return (
       <section className="panel empty-state">
         <h1>我的草稿</h1>
+        <Link href="/my-articles">查看我的投稿与审核结果 →</Link>
         <p>{actor ? "账号已封禁" : "请先登录后查看自己的草稿。"}</p>
         <Link className="button" href="/login">
           {actor ? "查看账户" : "前往登录"}
@@ -24,6 +25,7 @@ export default async function DraftsPage() {
     <>
       <div className="page-heading">
         <h1>我的草稿</h1>
+        <Link href="/my-articles">查看我的投稿与审核结果 →</Link>
         <p>仅自己可见，按最近保存时间排列，最多显示最近 100 篇。</p>
         {authorize(actor, "post.submit").allowed && (
           <Link className="button" href="/write">

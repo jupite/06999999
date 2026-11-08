@@ -53,7 +53,9 @@ const sections = {
   },
 };
 export function generateStaticParams() {
-  return Object.keys(sections).map((section) => ({ section }));
+  return Object.keys(sections)
+    .filter((section) => section !== "articles")
+    .map((section) => ({ section }));
 }
 export async function generateMetadata({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;

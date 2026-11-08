@@ -5,11 +5,21 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { saveDraftAction } from "@/app/write/actions";
+import { SubmitArticleButton } from "./article-controls";
 
 type Draft = { id?: string; version: number; title: string; markdown: string };
-export function MarkdownEditor({ initialDraft }: { initialDraft: Draft }) {
+export function MarkdownEditor({
+  initialDraft,
+  owner,
+  canSubmit,
+}: {
+  initialDraft: Draft;
+  owner: boolean;
+  canSubmit: boolean;
+}) {
   const [draft, setDraft] = useState(initialDraft);
   const [dirty, setDirty] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -73,7 +83,7 @@ export function MarkdownEditor({ initialDraft }: { initialDraft: Draft }) {
             required
             maxLength={160}
             value={draft.title}
-            disabled={pending}
+            disabled={pending || publishing}
             placeholder="给这篇文章起个标题"
             onChange={(e) => edit({ title: e.target.value })}
           />
@@ -84,7 +94,7 @@ export function MarkdownEditor({ initialDraft }: { initialDraft: Draft }) {
             <textarea
               aria-label="Markdown 正文"
               maxLength={100000}
-              disabled={pending}
+              disabled={pending || publishing}
               value={draft.markdown}
               onChange={(e) => edit({ markdown: e.target.value })}
             />
@@ -105,14 +115,21 @@ export function MarkdownEditor({ initialDraft }: { initialDraft: Draft }) {
           </section>
         </div>
         <div className="editor-toolbar">
-          <button className="button" disabled={pending} type="submit">
+          <button className="button" disabled={pending || publishing} type="submit">
             {pending ? "正在保存…" : "保存草稿"}
           </button>
+          <SubmitArticleButton
+            id={draft.id}
+            version={draft.version}
+            owner={owner}
+            disabled={dirty || pending || publishing || !canSubmit}
+            onBusyChange={setPublishing}
+          />
           {!draft.id && (
             <button
               className="button secondary"
               type="button"
-              disabled={pending}
+              disabled={pending || publishing}
               onClick={() => {
                 if (dirty && !window.confirm("导入旧的本地草稿会替换当前正文，是否继续？")) return;
                 try {
@@ -138,7 +155,7 @@ export function MarkdownEditor({ initialDraft }: { initialDraft: Draft }) {
         </p>
       )}
       <p className="muted">
-        草稿仅自己可见，不会公开发布。离开页面前请保存；图片上传和投稿审核将在下一阶段开放。
+        请先保存最新修改，再发布或投稿。站主直接发布，其他用户等待人工审核。投稿后暂不能直接编辑；图片上传尚未开放。
       </p>
     </>
   );

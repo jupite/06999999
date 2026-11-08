@@ -977,3 +977,31 @@ p {
   flex-wrap: wrap;
   gap: 12px;
 }
+
+.article-body {
+  margin-top: 24px;
+  overflow-wrap: anywhere;
+}
+.article-body pre,
+.article-body table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.article-body table {
+  display: block;
+}
+.article-body a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.draft-title textarea {
+  padding: 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  resize: vertical;
+}
+.draft-list + nav {
+  margin-top: 24px;
+}
