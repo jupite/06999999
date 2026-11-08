@@ -14,6 +14,22 @@ function LoginLink() {
   );
 }
 
+function GitHubAvatar({ src, name }: { src?: string | null; name?: string | null }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) return <UserRound size={28} aria-hidden="true" style={{ flexShrink: 0 }} />;
+  return (
+    <img
+      src={src}
+      alt={`${name || "用户"}的 GitHub 头像`}
+      width={28}
+      height={28}
+      referrerPolicy="no-referrer"
+      style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function SessionLink() {
   const { data: session, status } = useSession();
   if (status === "loading")
@@ -25,7 +41,11 @@ function SessionLink() {
   if (!session?.githubId) return <LoginLink />;
   return (
     <Link className="login-link" href="/login" aria-label="查看已登录账户">
-      <UserRound size={16} />
+      <GitHubAvatar
+        key={session.user?.image ?? "default"}
+        src={session.user?.image}
+        name={session.user?.name}
+      />
       <span
         style={{
           maxWidth: 100,
