@@ -33,8 +33,8 @@ export default async function LoginPage({
             </Link>
           )}
           {!actor.banned && (
-            <Link className="button secondary" href="/write">
-              写作预览
+            <Link className="button secondary" href="/drafts">
+              我的草稿
             </Link>
           )}
           <SignOutButton />
@@ -52,7 +52,7 @@ export default async function LoginPage({
       <p>使用 GitHub 登录，分享文章、项目和喜欢的音乐。</p>
       <GitHubLogin configured={configured} />
       {!configured && (
-        <p className="notice">GitHub 登录尚未配置，暂时无法登录。公开页面与写作预览可正常浏览。</p>
+        <p className="notice">GitHub 登录尚未配置，暂时无法登录。公开页面与我的草稿可正常浏览。</p>
       )}
       {error && (
         <p className="notice" role="alert">

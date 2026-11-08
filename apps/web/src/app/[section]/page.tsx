@@ -86,9 +86,9 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
         <h2>{data.empty}</h2>
         <p>{data.detail}</p>
         {section !== "about" && (
-          <Link className="button secondary" href={section === "articles" ? "/write" : "/login"}>
+          <Link className="button secondary" href={section === "articles" ? "/drafts" : "/login"}>
             <Plus size={16} />
-            {section === "articles" ? "打开写作预览" : "登录与投稿说明"}
+            {section === "articles" ? "我的草稿" : "登录与投稿说明"}
           </Link>
         )}
         <span className="empty-footnote">基础工程预览 · 内容服务尚未接通</span>

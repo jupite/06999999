@@ -1,65 +1,144 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-const initial =
-  "# 写下此刻的想法\n\n这里是 **Markdown 编辑预览**。\n\n- 写一篇文章\n- 留住一段日常\n\n> 时间会流逝，文字会留下。";
-export function MarkdownEditor() {
-  const [value, setValue] = useState(initial);
-  const [saved, setSaved] = useState(false);
+import { saveDraftAction } from "@/app/write/actions";
+
+type Draft = { id?: string; version: number; title: string; markdown: string };
+export function MarkdownEditor({ initialDraft }: { initialDraft: Draft }) {
+  const [draft, setDraft] = useState(initialDraft);
+  const [dirty, setDirty] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
   useEffect(() => {
-    try {
-      const draft = localStorage.getItem("site:editor-demo");
-      if (draft) setValue(draft);
-    } catch {}
-  }, []);
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  function edit(patch: Partial<Draft>) {
+    setDraft((current) => ({ ...current, ...patch }));
+    setDirty(true);
+    setMessage("");
+    setError("");
+  }
   return (
     <>
       <div className="editor-toolbar">
-        <span>本地写作预览 · 不会公开发布</span>
-        <button
-          className="button secondary"
-          onClick={() => {
-            try {
-              localStorage.setItem("site:editor-demo", value);
-              setSaved(true);
-            } catch {
-              setSaved(false);
-            }
+        <Link
+          href="/drafts"
+          onClick={(event) => {
+            if (dirty && !window.confirm("有未保存的修改，仍要离开吗？")) event.preventDefault();
           }}
         >
-          {saved ? "已保存到此浏览器" : "保存本地草稿"}
-        </button>
+          ← 我的草稿
+        </Link>
+        <span>{dirty ? "有未保存的修改" : draft.id ? "已保存至数据库" : "新草稿"}</span>
       </div>
-      <div className="editor-grid">
-        <label className="panel editor-input">
-          <span className="eyebrow">MARKDOWN</span>
-          <textarea
-            aria-label="Markdown 正文"
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              setSaved(false);
-            }}
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setError("");
+          setMessage("");
+          startTransition(async () => {
+            try {
+              const result = await saveDraftAction(draft);
+              if (!result.ok) {
+                setError(result.error);
+                return;
+              }
+              setDraft(result.draft);
+              setDirty(false);
+              setMessage("已保存至数据库，可在我的草稿中重新打开。");
+              if (!draft.id)
+                router.replace(`/write?id=${encodeURIComponent(result.draft.id)}`, {
+                  scroll: false,
+                });
+            } catch {
+              setError("网络异常，保存未确认。请保留正文后重试。");
+            }
+          });
+        }}
+      >
+        <label className="draft-title">
+          文章标题
+          <input
+            required
+            maxLength={160}
+            value={draft.title}
+            disabled={pending}
+            placeholder="给这篇文章起个标题"
+            onChange={(e) => edit({ title: e.target.value })}
           />
         </label>
-        <section className="panel editor-preview">
-          <span className="eyebrow">预览</span>
-          <div className="prose">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              skipHtml
-              components={{
-                img: () => <span className="notice">图片预览待接入授权媒体服务</span>,
+        <div className="editor-grid">
+          <label className="panel editor-input">
+            <span className="eyebrow">MARKDOWN</span>
+            <textarea
+              aria-label="Markdown 正文"
+              maxLength={100000}
+              disabled={pending}
+              value={draft.markdown}
+              onChange={(e) => edit({ markdown: e.target.value })}
+            />
+          </label>
+          <section className="panel editor-preview">
+            <span className="eyebrow">预览</span>
+            <div className="prose">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                skipHtml
+                components={{
+                  img: () => <span className="notice">图片预览待接入授权媒体服务</span>,
+                }}
+              >
+                {draft.markdown}
+              </ReactMarkdown>
+            </div>
+          </section>
+        </div>
+        <div className="editor-toolbar">
+          <button className="button" disabled={pending} type="submit">
+            {pending ? "正在保存…" : "保存草稿"}
+          </button>
+          {!draft.id && (
+            <button
+              className="button secondary"
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                if (dirty && !window.confirm("导入旧的本地草稿会替换当前正文，是否继续？")) return;
+                try {
+                  const old = localStorage.getItem("site:editor-demo");
+                  if (old) {
+                    edit({ markdown: old });
+                    setMessage("旧草稿已导入，填写标题并保存后才会写入数据库。");
+                  } else setMessage("此浏览器没有旧的本地草稿。");
+                } catch {
+                  setError("无法读取本地草稿。");
+                }
               }}
             >
-              {value}
-            </ReactMarkdown>
-          </div>
-        </section>
-      </div>
+              导入旧的本地草稿
+            </button>
+          )}
+        </div>
+      </form>
+      {message && <p role="status">{message}</p>}
+      {error && (
+        <p className="notice" role="alert">
+          {error}
+        </p>
+      )}
       <p className="muted">
-        这里只保存于当前浏览器。正式草稿、图片上传和提交审核将在内容服务接通后开放。
+        草稿仅自己可见，不会公开发布。离开页面前请保存；图片上传和投稿审核将在下一阶段开放。
       </p>
     </>
   );

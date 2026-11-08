@@ -12,7 +12,7 @@ pnpm db:generate
 pnpm dev
 ```
 
-打开 http://localhost:3000 。无外部配置也能浏览首页、七个栏目和 Markdown 写作预览。栏目当前为空状态，不伪造数据库内容。
+打开 http://localhost:3000 。无外部配置也能浏览首页与七个栏目；文章草稿需要登录和数据库连接。栏目当前为空状态，不伪造数据库内容。
 
 ## 本地数据库
 
@@ -42,7 +42,7 @@ uv run uvicorn site_api.main:app --app-dir src --host 127.0.0.1 --port 8000
 
 填写 apps/web/.env 中的 GITHUB_CLIENT_ID、GITHUB_CLIENT_SECRET、NEXTAUTH_SECRET、NEXTAUTH_URL 和 OWNER_GITHUB_ID。GitHub OAuth 回调地址使用 `<NEXTAUTH_URL>/api/auth/callback/github`，本地默认 http://localhost:3000/api/auth/callback/github 。OWNER_GITHUB_ID 为稳定的账号数字 ID。
 
-数据库迁移和 OAuth 配置完成前，登录按钮不可用。未执行真实 OAuth 联调。权限检查每次读取账号状态，站主身份来自服务端 OWNER_GITHUB_ID；当前 User.role 字段保留于模型，不能依靠客户端或数据库普通角色修改获得站主身份。
+数据库迁移和 OAuth 配置完成前，登录按钮不可用。本地 GitHub OAuth 登录和站主身份已验证。权限检查每次读取账号状态，站主身份来自服务端 OWNER_GITHUB_ID；当前 User.role 字段保留于模型，不能依靠客户端或数据库普通角色修改获得站主身份。
 
 ## 验证
 
@@ -57,9 +57,9 @@ Python 测试在 apps/python-api 中执行 `uv run pytest`。
 
 ## 当前范围
 
-- 已实现：深紫色响应式首页、七栏目入口、Markdown 实时预览和浏览器本地草稿、登录配置检测、GitHub 认证基础、站主页面访问检查。
+- 已实现：深紫色响应式首页、七栏目入口、Markdown 实时预览、数据库草稿列表与增删改、登录配置检测、GitHub 认证基础、站主页面访问检查。
 - 已建立：Prisma 数据模型与初始迁移、权限/配额/域名/审核规则模块及测试、FastAPI 健康与认证审核接口。
-- 待实现：内容 CRUD、持久草稿、上传及配额事务、后台管理、点赞评论接口、审核任务执行、AI 供应商适配、网易云真实播放、宠物动画和角色插画。
+- 待实现：正式发布与投稿、其他栏目 CRUD、上传及配额事务、后台管理、点赞评论接口、审核任务执行、AI 供应商适配、网易云真实播放、宠物动画和角色插画。
 - 音乐 Provider 是共享状态基础，不是已完成的网易云播放器；未接入曲目时控件禁用。
 
 更多决策见 [规划目录](doc/README.md) 和 [开发进度](doc/development-status.md)。不在仓库保存真实服务器资料、密码或 API 密钥。
@@ -74,3 +74,15 @@ pnpm run format:check
 ```
 
 根目录与 apps/web 均可执行上述命令，处理前端、文档和配置；生成文件、锁文件与 Python 缓存不参与。Python 格式化工具尚未同步到这个 E 盘项目。
+
+## 文章草稿
+
+登录后从账户页或文章栏目进入“我的草稿”（`/drafts`），点击“新建文章”。填写标题和 Markdown 正文，点击“保存草稿”；关闭页面后可从列表重新打开继续编辑。草稿只对作者本人可见，尚未开放发布与投稿。列表显示最近 100 篇。
+
+新草稿页可手动导入原浏览器的本地草稿，再保存到数据库。保存不是自动执行；编辑时离开页面前请先保存。旧标签页保存或删除时如有版本冲突，会提示重新打开，不会覆盖新版本。
+
+数据库集成测试（需要已配置的本地数据库，测试用户与草稿全部事务回滚）：
+
+```powershell
+pnpm test:drafts
+```

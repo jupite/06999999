@@ -1,0 +1,90 @@
+import "server-only";
+import { randomUUID } from "node:crypto";
+import type { Prisma } from "@/generated/prisma/client";
+import type { Actor } from "../domain/permissions";
+import { DraftError, parseDraft, requireDraftActor } from "../domain/drafts";
+
+type Db = Prisma.TransactionClient;
+function scope(actor: Actor): Prisma.ContentWhereInput {
+  return {
+    authorId: actor.id,
+    kind: "POST",
+    publishedVersion: null,
+    revisions: { some: { state: "DRAFT" }, every: { state: "DRAFT" } },
+  };
+}
+export async function listDrafts(db: Db, actor: Actor) {
+  if (actor.banned) throw new DraftError("账号已封禁");
+  return db.content.findMany({
+    where: scope(actor),
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    take: 100,
+    select: {
+      id: true,
+      currentVersion: true,
+      updatedAt: true,
+      revisions: { orderBy: { version: "desc" }, take: 1, select: { title: true } },
+    },
+  });
+}
+export async function readDraft(db: Db, actor: Actor, id: string) {
+  if (actor.banned) throw new DraftError("账号已封禁");
+  const content = await db.content.findFirst({
+    where: { ...scope(actor), id },
+    include: { revisions: { orderBy: { version: "desc" }, take: 1 } },
+  });
+  if (!content) return null;
+  const revision = content.revisions[0];
+  return {
+    id: content.id,
+    version: content.currentVersion,
+    title: revision.title,
+    markdown: revision.markdown,
+  };
+}
+// Call inside a transaction so the version increment and revision are atomic.
+export async function saveDraft(db: Db, actor: Actor | null, value: unknown) {
+  const input = parseDraft(value);
+  const author = requireDraftActor(actor, !!input.id);
+  if (!input.id) {
+    const content = await db.content.create({
+      data: {
+        authorId: author.id,
+        kind: "POST",
+        slug: randomUUID(),
+        revisions: { create: { version: 1, title: input.title, markdown: input.markdown } },
+      },
+    });
+    return { ...input, id: content.id, version: 1 };
+  }
+  const updated = await db.content.updateMany({
+    where: { ...scope(author), id: input.id, currentVersion: input.version },
+    data: { currentVersion: { increment: 1 }, updatedAt: new Date() },
+  });
+  if (updated.count !== 1)
+    throw new DraftError("草稿不可编辑或已有更新。请保留当前正文，再重新打开草稿。");
+  await db.contentRevision.create({
+    data: {
+      contentId: input.id,
+      version: input.version + 1,
+      title: input.title,
+      markdown: input.markdown,
+    },
+  });
+  return { ...input, id: input.id, version: input.version + 1 };
+}
+export async function deleteDraft(db: Db, actor: Actor | null, id: unknown, version: unknown) {
+  const author = requireDraftActor(actor, true);
+  if (
+    typeof id !== "string" ||
+    !id ||
+    typeof version !== "number" ||
+    !Number.isSafeInteger(version) ||
+    version < 1
+  )
+    throw new DraftError("草稿编号或版本无效。");
+  const result = await db.content.deleteMany({
+    where: { ...scope(author), id, currentVersion: version },
+  });
+  if (result.count !== 1) throw new DraftError("草稿不存在、已有更新或不可删除，请刷新列表。");
+}

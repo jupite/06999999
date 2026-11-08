@@ -16,7 +16,8 @@
     "db:status": "pnpm --filter @site/web db:status",
     "db:migrate": "pnpm --filter @site/web db:migrate",
     "format": "prettier --write \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
-    "format:check": "prettier --check \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown"
+    "format:check": "prettier --check \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
+    "test:drafts": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/drafts.integration.test.ts"
   },
   "devDependencies": {
     "prettier": "3.9.9"
