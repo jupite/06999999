@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js：全栈调试（Chrome）",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/web",
+      "program": "${workspaceFolder}/apps/web/node_modules/next/dist/bin/next",
+      "runtimeArgs": ["--inspect=127.0.0.1:9229"],
+      "args": ["dev", "--hostname", "127.0.0.1", "--port", "3000"],
+      "console": "integratedTerminal",
+      "outputCapture": "std",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"],
+      "serverReadyAction": {
+        "action": "debugWithChrome",
+        "pattern": "Ready in",
+        "uriFormat": "http://localhost:3000",
+        "webRoot": "${workspaceFolder}/apps/web",
+        "killOnServerStop": true
+      }
+    },
+    {
+      "name": "Next.js：仅服务端调试",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/web",
+      "program": "${workspaceFolder}/apps/web/node_modules/next/dist/bin/next",
+      "runtimeArgs": ["--inspect=127.0.0.1:9229"],
+      "args": ["dev", "--hostname", "127.0.0.1", "--port", "3000"],
+      "console": "integratedTerminal",
+      "outputCapture": "std",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Chrome：仅前端调试（先启动 pnpm dev）",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/apps/web"
+    }
+  ]
+}

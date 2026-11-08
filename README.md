@@ -86,3 +86,7 @@ pnpm run format:check
 ```powershell
 pnpm test:drafts
 ```
+
+## 断点调试
+
+VS Code 已配置 Next.js 服务端、Chrome 前端和一键全栈调试。打开仓库根目录，按 Ctrl+Shift+D 选择配置，再按 F5。详细步骤见 [调试指南](doc/debugging.md)。
