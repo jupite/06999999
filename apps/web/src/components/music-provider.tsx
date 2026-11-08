@@ -1,4 +1,6 @@
 "use client";
+
+import { useI18n } from "@/i18n/client";
 import { createContext, useContext, useRef, useState, useEffect, type ReactNode } from "react";
 import { Music2, Pause, Play, SkipBack, SkipForward, X, Disc3, GripHorizontal } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -7,7 +9,7 @@ type Player = {
   queue: Track[];
   index: number;
   playing: boolean;
-  error: string;
+  error: "musicError" | "trackUnavailable" | "";
   load: (tracks: Track[]) => void;
   toggle: () => void;
   next: () => void;
@@ -19,7 +21,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<Track[]>([]);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Player["error"]>("");
   const load = (tracks: Track[]) => {
     setQueue(tracks);
     setIndex(0);
@@ -33,7 +35,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       try {
         await audio.current.play();
       } catch {
-        setError("暂时无法播放，请重试或前往音乐来源页面。");
+        setError("musicError");
       }
   }
   function skip(delta: number) {
@@ -63,7 +65,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         onPause={() => setPlaying(false)}
         onError={() => {
           setPlaying(false);
-          setError("当前曲目不可播放");
+          setError("trackUnavailable");
         }}
         onEnded={() => setPlaying(false)}
       />
@@ -72,6 +74,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   );
 }
 export function MusicCard() {
+  const { t } = useI18n();
   const player = useContext(Context)!;
   const track = player.queue[player.index];
   return (
@@ -84,27 +87,35 @@ export function MusicCard() {
           <Disc3 size={55} />
         </div>
         <div>
-          <h3>{track?.title ?? "让音乐，慢一点"}</h3>
-          <p>{track?.artist ?? "网易云 · 单曲与歌单"}</p>
+          <h3>{track?.title ?? t("musicHeading")}</h3>
+          <p>{track?.artist ?? t("musicSource")}</p>
         </div>
       </div>
       <div className="music-status">
-        {player.error || (track ? "已加入播放队列" : "播放服务接入中，暂不可播放")}
+        {t(player.error || (track ? "trackQueued" : "playbackUnavailable"))}
       </div>
       <div className="player-line" />
       <div className="player-controls">
-        <button aria-label="上一首" disabled={player.queue.length < 2} onClick={player.previous}>
+        <button
+          aria-label={t("previousTrack")}
+          disabled={player.queue.length < 2}
+          onClick={player.previous}
+        >
           <SkipBack size={17} />
         </button>
         <button
           className="play"
-          aria-label={player.playing ? "暂停" : "播放"}
+          aria-label={player.playing ? t("pause") : t("play")}
           disabled={!track}
           onClick={player.toggle}
         >
           {player.playing ? <Pause size={19} /> : <Play size={19} />}
         </button>
-        <button aria-label="下一首" disabled={player.queue.length < 2} onClick={player.next}>
+        <button
+          aria-label={t("nextTrack")}
+          disabled={player.queue.length < 2}
+          onClick={player.next}
+        >
           <SkipForward size={17} />
         </button>
       </div>
@@ -112,6 +123,7 @@ export function MusicCard() {
   );
 }
 function FloatingPlayer() {
+  const { t } = useI18n();
   const player = useContext(Context)!;
   const path = usePathname();
   const [hidden, setHidden] = useState(false);
@@ -123,7 +135,11 @@ function FloatingPlayer() {
   if (!player.queue.length || path === "/music") return null;
   if (hidden)
     return (
-      <button className="restore-player" onClick={() => setHidden(false)} aria-label="展开播放器">
+      <button
+        className="restore-player"
+        onClick={() => setHidden(false)}
+        aria-label={t("expandPlayer")}
+      >
         <Music2 size={20} />
       </button>
     );
@@ -131,7 +147,7 @@ function FloatingPlayer() {
     <div className="floating-player panel" style={{ left: position.x, top: position.y }}>
       <button
         className="drag-handle"
-        aria-label="拖动播放器"
+        aria-label={t("dragPlayer")}
         onPointerDown={(event) => {
           event.currentTarget.setPointerCapture(event.pointerId);
           drag.current = { x: event.clientX, y: event.clientY, left: position.x, top: position.y };
@@ -159,13 +175,13 @@ function FloatingPlayer() {
         <GripHorizontal size={18} />
       </button>
       <span>{player.queue[player.index]?.title}</span>
-      <button onClick={player.toggle} aria-label={player.playing ? "暂停" : "播放"}>
+      <button onClick={player.toggle} aria-label={player.playing ? t("pause") : t("play")}>
         {player.playing ? <Pause size={16} /> : <Play size={16} />}
       </button>
-      <button onClick={player.next} disabled={player.queue.length < 2} aria-label="下一首">
+      <button onClick={player.next} disabled={player.queue.length < 2} aria-label={t("nextTrack")}>
         <SkipForward size={16} />
       </button>
-      <button aria-label="收起播放器" onClick={() => setHidden(true)}>
+      <button aria-label={t("collapsePlayer")} onClick={() => setHidden(true)}>
         <X size={16} />
       </button>
     </div>

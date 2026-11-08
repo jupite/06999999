@@ -1,3 +1,4 @@
+import { getI18n } from "@/i18n/server";
 import Link from "next/link";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
@@ -17,12 +18,16 @@ import {
 import { DeletePublishedArticleButton } from "@/components/article-controls";
 import { DeleteDraftButton } from "@/components/delete-draft-button";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "我的文章" };
+export async function generateMetadata() {
+  const { t } = await getI18n();
+  return { title: t("myArticles") };
+}
 export default async function MyArticlesPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string; status?: string }>;
 }) {
+  const { t } = await getI18n();
   const actor = await currentActor();
   if (!actor || actor.banned)
     return (
@@ -30,7 +35,7 @@ export default async function MyArticlesPage({
         <ArticleNavigation active="mine" />
         <ArticleAccessNotice
           signedIn={!!actor}
-          reason={actor ? "账号已封禁" : "登录后查看自己的草稿和投稿。"}
+          reason={actor ? "账号已封禁" : t("signInForArticles")}
         />
       </>
     );
@@ -39,14 +44,15 @@ export default async function MyArticlesPage({
     status = articleFilter(query.status);
   const articles = await listMyArticles(getDb(), actor, page, status);
   const canEdit = authorize(actor, "content.editOwn").allowed;
+  const canSubmit = authorize(actor, "post.submit").allowed;
   return (
     <>
       <div className="page-heading">
-        <h1>我的文章</h1>
-        <p>在这里统一查看草稿、审核结果和已发布文章。</p>
+        <h1>{t("myArticles")}</h1>
+        <p>{t("myArticlesDescription")}</p>
         <ArticleNavigation active="mine" />
       </div>
-      <nav className="article-filters" aria-label="文章状态筛选">
+      <nav className="article-filters" aria-label={t("articleFilters")}>
         {Object.entries(articleFilters).map(([value, label]) => (
           <Link
             key={value}
@@ -54,18 +60,23 @@ export default async function MyArticlesPage({
             className={value === status ? "button" : "button secondary"}
             aria-current={value === status ? "page" : undefined}
           >
-            {label}
+            {t(label)}
           </Link>
         ))}
       </nav>
       <div className="draft-list">
         {articles.slice(0, 20).map((article) => {
           const revision = article.revisions[0];
+          const published = article.publishedVersion !== null;
           return (
             revision && (
               <article className="panel draft-card" key={article.id}>
                 <h2>{revision.title}</h2>
-                <p>{articleStateLabels[revision.state]}</p>
+                <p>
+                  {published && revision.state !== "PUBLISHED"
+                    ? t("editStatus", { status: t(articleStateLabels[revision.state]) })
+                    : t(articleStateLabels[revision.state])}
+                </p>
                 <div className="draft-actions">
                   <Link
                     className="button secondary"
@@ -76,10 +87,10 @@ export default async function MyArticlesPage({
                     }
                   >
                     {revision.state === "DRAFT"
-                      ? "继续编辑"
+                      ? t("continueEditing")
                       : revision.state === "PUBLISHED"
-                        ? "查看文章"
-                        : "查看投稿"}
+                        ? t("viewArticle")
+                        : t("viewSubmission")}
                   </Link>
                   {canEdit && revision.state === "DRAFT" && (
                     <DeleteDraftButton
@@ -88,7 +99,15 @@ export default async function MyArticlesPage({
                       title={revision.title}
                     />
                   )}
-                  {canEdit && revision.state === "PUBLISHED" && (
+                  {published &&
+                    canEdit &&
+                    canSubmit &&
+                    (revision.state === "PUBLISHED" || revision.state === "REJECTED") && (
+                      <Link className="button secondary" href={`/write?id=${article.id}`}>
+                        {t("editArticle")}
+                      </Link>
+                    )}
+                  {published && canEdit && (
                     <DeletePublishedArticleButton
                       id={article.id}
                       version={article.currentVersion}
@@ -103,8 +122,12 @@ export default async function MyArticlesPage({
       </div>
       {!articles.length && (
         <section className="panel empty-state">
-          <h2>暂无{status === "all" ? "文章" : articleFilters[status]}</h2>
-          <p>可以切换筛选，或点击“写文章”开始创作。</p>
+          <h2>
+            {status === "all"
+              ? t("emptyArticles")
+              : t("emptyFilteredArticles", { filter: t(articleFilters[status]) })}
+          </h2>
+          <p>{t("emptyMyArticlesHelp")}</p>
         </section>
       )}
       <ArticlePagination

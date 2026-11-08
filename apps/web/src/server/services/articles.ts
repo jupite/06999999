@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { authorize, type Actor } from "../domain/permissions";
+import { parseDraft } from "../domain/drafts";
 import {
   ArticleError,
   articleReference,
@@ -73,6 +74,65 @@ export async function submitArticle(
   });
   return { id, slug: content.slug, state };
 }
+
+export async function submitArticleEdit(db: Db, actor: Actor | null, value: unknown) {
+  const author = requireActor(actor);
+  const access = authorize(author, "content.editOwn");
+  if (!access.allowed) throw new ArticleError(access.reason);
+  const input = parseDraft(value);
+  const { id, version } = articleReference(input.id, input.version);
+  if (!input.markdown.trim()) throw new ArticleError("请填写正文再提交。");
+
+  const state = author.role === "OWNER" ? "PUBLISHED" : "PENDING_HUMAN";
+  const nextVersion = version + 1;
+  const claimed = await db.content.updateMany({
+    where: {
+      id,
+      authorId: author.id,
+      kind: "POST",
+      currentVersion: version,
+      publishedVersion: { not: null },
+      revisions: { some: { version, state: { in: ["PUBLISHED", "REJECTED"] } } },
+    },
+    data: {
+      currentVersion: nextVersion,
+      ...(state === "PUBLISHED" && { publishedVersion: nextVersion }),
+    },
+  });
+  if (claimed.count !== 1) throw new ArticleError("文章版本已变化或不可编辑，请重新打开后重试。");
+  const revision = await db.contentRevision.create({
+    data: {
+      contentId: id,
+      version: nextVersion,
+      title: input.title,
+      markdown: input.markdown,
+      state,
+    },
+    include: { content: { select: { slug: true } } },
+  });
+  if (state === "PUBLISHED") {
+    await db.moderationReview.create({
+      data: {
+        revisionId: revision.id,
+        targetVersion: nextVersion,
+        result: state,
+        reason: "站主直接发布修改",
+        reviewerId: author.id,
+      },
+    });
+  }
+  await db.auditLog.create({
+    data: {
+      actorId: author.id,
+      action: state === "PUBLISHED" ? "article.publishEdit" : "article.submitEdit",
+      targetId: id,
+      before: { version },
+      after: { version: nextVersion, state },
+    },
+  });
+  return { id, slug: revision.content.slug, state };
+}
+
 export async function reviewArticle(
   db: Db,
   actor: Actor | null,
@@ -89,7 +149,6 @@ export async function reviewArticle(
       id,
       kind: "POST",
       currentVersion: version,
-      publishedVersion: null,
       revisions: { some: { version, state: "PENDING_HUMAN" } },
     },
     data: { updatedAt: new Date() },
@@ -122,10 +181,9 @@ export async function reviewArticle(
     where: { contentId_version: { contentId: id, version } },
     data: { state },
   });
-  await db.content.update({
-    where: { id },
-    data: { publishedVersion: state === "PUBLISHED" ? version : null },
-  });
+  if (state === "PUBLISHED") {
+    await db.content.update({ where: { id }, data: { publishedVersion: version } });
+  }
   await db.moderationReview.create({
     data: {
       revisionId: revision.id,
@@ -163,6 +221,7 @@ export async function copyRejectedArticle(
       kind: "POST",
       currentVersion: version,
       publishedVersion: null,
+      revisions: { none: { state: "WITHDRAWN" } },
     },
     include: { revisions: { where: { version, state: "REJECTED" } } },
   });
@@ -211,7 +270,6 @@ export async function listMyArticles(
             ? { publishedVersion: { not: null } }
             : filter === "pending"
               ? {
-                  publishedVersion: null,
                   revisions: { some: { state: { in: ["PENDING_AI", "PENDING_HUMAN"] } } },
                 }
               : filter === "rejected"
@@ -236,7 +294,6 @@ export async function listPendingArticles(db: Db, actor: Actor | null, page = 1)
   return db.content.findMany({
     where: {
       kind: "POST",
-      publishedVersion: null,
       revisions: { some: { state: "PENDING_HUMAN" } },
     },
     orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
@@ -248,7 +305,7 @@ export async function listPendingArticles(db: Db, actor: Actor | null, page = 1)
 export async function readPendingArticle(db: Db, actor: Actor | null, id: string) {
   requireActor(actor, true);
   const content = await db.content.findFirst({
-    where: { id, kind: "POST", publishedVersion: null },
+    where: { id, kind: "POST" },
     include: { author: { select: { name: true, banned: true } }, revisions: latestRevision },
   });
   return content?.revisions[0]?.state === "PENDING_HUMAN" ? content : null;
@@ -321,26 +378,37 @@ export async function deletePublishedArticle(
   const access = authorize(author, "content.editOwn");
   if (!access.allowed) throw new ArticleError(access.reason);
   const { id, version } = articleReference(rawId, rawVersion);
+  const content = await db.content.findFirst({
+    where: { id, authorId: author.id, kind: "POST", currentVersion: version },
+    select: { publishedVersion: true, slug: true },
+  });
+  const conflict = "文章已删除、版本已变化或无权操作，请刷新列表。";
+  if (!content || content.publishedVersion === null) throw new ArticleError(conflict);
+  const { publishedVersion } = content;
   const claimed = await db.content.updateMany({
     where: {
       id,
       authorId: author.id,
       kind: "POST",
       currentVersion: version,
-      publishedVersion: version,
-      revisions: { some: { version, state: "PUBLISHED" } },
+      publishedVersion,
+      revisions: { some: { version: publishedVersion, state: "PUBLISHED" } },
     },
     data: { publishedVersion: null, updatedAt: new Date() },
   });
-  if (claimed.count !== 1) throw new ArticleError("文章已删除、版本已变化或无权操作，请刷新列表。");
+  if (claimed.count !== 1) throw new ArticleError(conflict);
   const revision = await db.contentRevision.update({
-    where: { contentId_version: { contentId: id, version } },
+    where: { contentId_version: { contentId: id, version: publishedVersion } },
+    data: { state: "WITHDRAWN" },
+  });
+  await db.contentRevision.updateMany({
+    where: { contentId: id, version, state: { in: ["PENDING_AI", "PENDING_HUMAN"] } },
     data: { state: "WITHDRAWN" },
   });
   await db.moderationReview.create({
     data: {
       revisionId: revision.id,
-      targetVersion: version,
+      targetVersion: publishedVersion,
       result: "WITHDRAWN",
       reason: "作者删除已发布文章",
       reviewerId: author.id,
@@ -351,10 +419,9 @@ export async function deletePublishedArticle(
       actorId: author.id,
       action: "article.delete",
       targetId: id,
-      before: { version, state: "PUBLISHED" },
-      after: { version, state: "WITHDRAWN" },
+      before: { version: publishedVersion, state: "PUBLISHED" },
+      after: { version: publishedVersion, state: "WITHDRAWN" },
     },
   });
-  const content = await db.content.findUniqueOrThrow({ where: { id }, select: { slug: true } });
   return { slug: content.slug };
 }

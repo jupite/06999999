@@ -1,26 +1,30 @@
 "use client";
 
+import { useI18n } from "@/i18n/client";
+
 import Link from "next/link";
 import { Github, UserRound } from "lucide-react";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 
 function LoginLink() {
+  const { t } = useI18n();
   return (
     <Link className="login-link" href="/login">
       <Github size={16} />
-      <span>登录</span>
+      <span>{t("signIn")}</span>
     </Link>
   );
 }
 
 function GitHubAvatar({ src, name }: { src?: string | null; name?: string | null }) {
+  const { t } = useI18n();
   const [failed, setFailed] = useState(false);
   if (!src || failed) return <UserRound size={28} aria-hidden="true" style={{ flexShrink: 0 }} />;
   return (
     <img
       src={src}
-      alt={`${name || "用户"}的 GitHub 头像`}
+      alt={t("githubAvatar", { name: name || t("user") })}
       width={28}
       height={28}
       referrerPolicy="no-referrer"
@@ -31,16 +35,17 @@ function GitHubAvatar({ src, name }: { src?: string | null; name?: string | null
 }
 
 function SessionLink() {
+  const { t } = useI18n();
   const { data: session, status } = useSession();
   if (status === "loading")
     return (
       <span className="login-link" role="status">
-        正在确认登录…
+        {t("signingIn")}
       </span>
     );
   if (!session?.githubId) return <LoginLink />;
   return (
-    <Link className="login-link" href="/login" aria-label="查看已登录账户">
+    <Link className="login-link" href="/login" aria-label={t("viewSignedInAccount")}>
       <GitHubAvatar
         key={session.user?.image ?? "default"}
         src={session.user?.image}
@@ -54,7 +59,7 @@ function SessionLink() {
           whiteSpace: "nowrap",
         }}
       >
-        {session.user?.name || "已登录"}
+        {session.user?.name || t("signedIn")}
       </span>
     </Link>
   );
@@ -70,6 +75,7 @@ export function AccountMenu({ enabled }: { enabled: boolean }) {
 }
 
 export function SignOutButton() {
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
@@ -88,9 +94,9 @@ export function SignOutButton() {
           }
         }}
       >
-        {pending ? "正在退出…" : "退出登录"}
+        {pending ? t("signingOut") : t("signOut")}
       </button>
-      {failed && <p role="alert">退出失败，请重试。</p>}
+      {failed && <p role="alert">{t("signOutFailed")}</p>}
     </>
   );
 }

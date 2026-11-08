@@ -1,3 +1,4 @@
+import { getI18n } from "@/i18n/server";
 import Link from "next/link";
 
 import { currentActor } from "@/server/auth";
@@ -8,8 +9,12 @@ import { ArticleAccessNotice } from "@/components/article-shared";
 import { ArticleBody } from "@/components/article-body";
 import { ReviewArticleForm } from "@/components/article-controls";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "审核投稿" };
+export async function generateMetadata() {
+  const { t } = await getI18n();
+  return { title: t("reviewSubmission") };
+}
 export default async function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
+  const { t } = await getI18n();
   const actor = await currentActor();
   const access = authorize(actor, "site.manage");
   if (!access.allowed) return <ArticleAccessNotice signedIn={!!actor} reason={access.reason} />;
@@ -17,22 +22,21 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   if (!article)
     return (
       <section className="panel empty-state">
-        <h1>该投稿已处理或不存在</h1>
+        <h1>{t("reviewUnavailable")}</h1>
         <Link className="button" href="/admin/reviews">
-          返回待审核列表
+          {t("backToReviews")}
         </Link>
       </section>
     );
   const revision = article.revisions[0];
   return (
     <>
-      <Link href="/admin/reviews">← 返回待审核列表</Link>
+      <Link href="/admin/reviews">← {t("backToReviews")}</Link>
       <article className="panel draft-card">
         <h1>{revision.title}</h1>
-        <p>
-          作者：{article.author.name} · 版本 {revision.version}
-        </p>
-        {article.author.banned && <p className="notice">作者已被封禁，不能通过发布。</p>}
+        <p>{t("reviewVersion", { author: article.author.name, version: revision.version })}</p>
+        {article.author.banned && <p className="notice">{t("authorBanned")}</p>}
+        {article.publishedVersion !== null && <p>{t("reviewPublishedEdit")}</p>}
         <ArticleBody markdown={revision.markdown} />
       </article>
       <ReviewArticleForm id={article.id} version={revision.version} />

@@ -6,6 +6,7 @@ import { getDb } from "../db";
 import { saveDraft, deleteDraft } from "./drafts";
 import {
   submitArticle,
+  submitArticleEdit,
   deletePublishedArticle,
   reviewArticle,
   copyRejectedArticle,
@@ -164,7 +165,7 @@ test("article submission and review isolate private content and publish only the
   }
 });
 
-test("article filters paginate correctly and authors can remove only their own published articles", async () => {
+test("article filters, edits and deletion respect ownership and published revisions", async () => {
   const db = getDb();
   const rollback = new Error("ROLLBACK_DELETE_TESTS");
   try {
@@ -247,6 +248,49 @@ test("article filters paginate correctly and authors can remove only their own p
           await reviewArticle(tx, actor, pending.id, pending.version, "reject", "需要补充");
           assert.equal((await listMyArticles(tx, member, 1, "pending")).length, 0);
           assert.equal((await listMyArticles(tx, member, 1, "rejected")).length, 1);
+
+          const toPublish = await copyRejectedArticle(tx, member, pending.id, pending.version);
+          const original = await submitArticle(tx, member, toPublish.id, toPublish.version);
+          await reviewArticle(tx, actor, toPublish.id, toPublish.version, "approve", "");
+          const edit = { ...toPublish, title: "修改标题", markdown: "待审核的新正文" };
+          await assert.rejects(submitArticleEdit(tx, actor, edit), /不可编辑/);
+          await assert.rejects(submitArticleEdit(tx, member, { ...edit, markdown: " " }), /正文/);
+          assert.equal((await submitArticleEdit(tx, member, edit)).state, "PENDING_HUMAN");
+          await assert.rejects(submitArticleEdit(tx, member, edit), /版本已变化/);
+          await assert.rejects(submitArticleEdit(tx, member, { ...edit, version: 2 }), /不可编辑/);
+          assert.equal(
+            (await readPublishedArticle(tx, original.slug))?.markdown,
+            toPublish.markdown,
+          );
+          assert.equal(
+            (await readPendingArticle(tx, actor, edit.id))?.revisions[0].markdown,
+            edit.markdown,
+          );
+          assert.ok((await listPendingArticles(tx, actor)).some((item) => item.id === edit.id));
+          assert.ok(
+            (await listMyArticles(tx, member, 1, "pending")).some((item) => item.id === edit.id),
+          );
+
+          await reviewArticle(tx, actor, edit.id, 2, "reject", "请补充细节");
+          assert.equal(
+            (await readPublishedArticle(tx, original.slug))?.markdown,
+            toPublish.markdown,
+          );
+          assert.equal(await readPendingArticle(tx, actor, edit.id), null);
+          await submitArticleEdit(tx, member, { ...edit, version: 2, markdown: "重新提交的正文" });
+          await reviewArticle(tx, actor, edit.id, 3, "approve", "");
+          assert.equal((await readPublishedArticle(tx, original.slug))?.markdown, "重新提交的正文");
+          await submitArticleEdit(tx, member, { ...edit, version: 3 });
+          await deletePublishedArticle(tx, member, edit.id, 4);
+          await assert.rejects(reviewArticle(tx, actor, edit.id, 4, "approve", ""));
+          assert.equal(await readPublishedArticle(tx, original.slug), null);
+          assert.equal(await readPendingArticle(tx, actor, edit.id), null);
+
+          const ownerPost = await submitArticle(tx, actor, fresh.id, fresh.version);
+          const ownerEdit = await submitArticleEdit(tx, actor, { ...fresh, markdown: "站主修改" });
+          assert.equal(ownerEdit.state, "PUBLISHED");
+          assert.equal(ownerEdit.slug, ownerPost.slug);
+          assert.equal((await readPublishedArticle(tx, ownerPost.slug))?.markdown, "站主修改");
           throw rollback;
         },
         { timeout: 30000 },

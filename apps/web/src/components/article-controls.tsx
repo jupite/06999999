@@ -1,4 +1,6 @@
 "use client";
+
+import { useI18n, type Notice } from "@/i18n/client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -21,8 +23,9 @@ export function SubmitArticleButton({
   disabled: boolean;
   onBusyChange: (busy: boolean) => void;
 }) {
+  const { t, notice } = useI18n();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Notice | null>(null);
   const router = useRouter();
   return (
     <div>
@@ -31,22 +34,14 @@ export function SubmitArticleButton({
         type="button"
         disabled={!id || disabled || pending}
         onClick={() => {
-          if (
-            !id ||
-            !window.confirm(
-              owner
-                ? "发布后所有访客都能阅读这篇文章，确定发布吗？"
-                : "确定提交当前已保存的版本吗？提交后等待人工审核，暂不能直接修改。",
-            )
-          )
-            return;
-          setError("");
+          if (!id || !window.confirm(owner ? t("confirmPublish") : t("confirmSubmit"))) return;
+          setError(null);
           onBusyChange(true);
           startTransition(async () => {
             try {
               const result = await submitArticleAction(id, version);
               if (!result.ok) {
-                setError(result.error);
+                setError({ system: result.error });
                 return;
               }
               router.replace(
@@ -55,55 +50,51 @@ export function SubmitArticleButton({
                   : `/my-articles/${result.id}`,
               );
             } catch {
-              setError("网络异常，请到我的文章确认状态后再操作。");
+              setError("submitNetworkError");
             } finally {
               onBusyChange(false);
             }
           });
         }}
       >
-        {pending ? "正在提交…" : owner ? "直接发布" : "提交人工审核"}
+        {pending ? t("submitting") : owner ? t("publish") : t("submit")}
       </button>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{notice(error)}</p>}
     </div>
   );
 }
 export function ReviewArticleForm({ id, version }: { id: string; version: number }) {
+  const { t, notice } = useI18n();
   const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Notice | null>(null);
   const router = useRouter();
   function review(decision: "approve" | "reject") {
     if (decision === "reject" && !reason.trim()) {
-      setError("请填写拒绝原因。");
+      setError("rejectionReasonRequired");
       return;
     }
-    if (
-      !window.confirm(
-        decision === "approve" ? "通过后文章立即公开，确认通过审核吗？" : "确认拒绝这次投稿吗？",
-      )
-    )
-      return;
-    setError("");
+    if (!window.confirm(decision === "approve" ? t("confirmApprove") : t("confirmReject"))) return;
+    setError(null);
     startTransition(async () => {
       try {
         const result = await reviewArticleAction(id, version, decision, reason);
         if (!result.ok) {
-          setError(result.error);
+          setError({ system: result.error });
           return;
         }
         router.replace("/admin/reviews");
         router.refresh();
       } catch {
-        setError("网络异常，请刷新确认审核结果。");
+        setError("reviewNetworkError");
       }
     });
   }
   return (
     <section className="panel draft-card">
-      <h2>审核决定</h2>
+      <h2>{t("reviewDecision")}</h2>
       <label className="draft-title">
-        审核说明（拒绝时必填）
+        {t("reviewNotes")}
         <textarea
           value={reason}
           maxLength={2000}
@@ -114,20 +105,21 @@ export function ReviewArticleForm({ id, version }: { id: string; version: number
       </label>
       <div className="draft-actions">
         <button className="button" disabled={pending} onClick={() => review("approve")}>
-          通过并发布
+          {t("approveAndPublish")}
         </button>
         <button className="button secondary" disabled={pending} onClick={() => review("reject")}>
-          拒绝投稿
+          {t("rejectSubmission")}
         </button>
       </div>
-      {pending && <p role="status">正在处理…</p>}
-      {error && <p role="alert">{error}</p>}
+      {pending && <p role="status">{t("processing")}</p>}
+      {error && <p role="alert">{notice(error)}</p>}
     </section>
   );
 }
 export function CopyRejectedButton({ id, version }: { id: string; version: number }) {
+  const { t, notice } = useI18n();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Notice | null>(null);
   const router = useRouter();
   return (
     <div>
@@ -135,24 +127,24 @@ export function CopyRejectedButton({ id, version }: { id: string; version: numbe
         className="button"
         disabled={pending}
         onClick={() => {
-          setError("");
+          setError(null);
           startTransition(async () => {
             try {
               const result = await copyRejectedArticleAction(id, version);
               if (!result.ok) {
-                setError(result.error);
+                setError({ system: result.error });
                 return;
               }
               router.push(`/write?id=${result.id}`);
             } catch {
-              setError("网络异常，请查看草稿列表确认结果。");
+              setError("copyNetworkError");
             }
           });
         }}
       >
-        {pending ? "正在复制…" : "复制为新草稿修改"}
+        {pending ? t("copying") : t("copyRejected")}
       </button>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{notice(error)}</p>}
     </div>
   );
 }
@@ -166,8 +158,9 @@ export function DeletePublishedArticleButton({
   version: number;
   title: string;
 }) {
+  const { t, notice } = useI18n();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Notice | null>(null);
   const router = useRouter();
   return (
     <div>
@@ -176,30 +169,25 @@ export function DeletePublishedArticleButton({
         className="button secondary"
         disabled={pending}
         onClick={() => {
-          if (
-            !window.confirm(
-              `确定删除已发布文章“${title}”吗？删除后不再公开，也不会显示在我的文章中；审核记录保留，暂不提供恢复入口。`,
-            )
-          )
-            return;
-          setError("");
+          if (!window.confirm(t("confirmDeleteArticle", { title }))) return;
+          setError(null);
           startTransition(async () => {
             try {
               const result = await deletePublishedArticleAction(id, version);
               if (!result.ok) {
-                setError(result.error);
+                setError({ system: result.error });
                 return;
               }
               router.refresh();
             } catch {
-              setError("网络异常，请刷新列表确认删除结果。");
+              setError("deleteArticleNetworkError");
             }
           });
         }}
       >
-        {pending ? "正在删除…" : "删除文章"}
+        {pending ? t("deleting") : t("deleteArticle")}
       </button>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{notice(error)}</p>}
     </div>
   );
 }

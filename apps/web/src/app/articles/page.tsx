@@ -1,15 +1,20 @@
+import { getI18n } from "@/i18n/server";
 import Link from "next/link";
 import { getDb } from "@/server/db";
 import { listPublishedArticles } from "@/server/services/articles";
 import { articlePage } from "@/server/domain/articles";
 import { ArticlePagination, ArticleTime, ArticleNavigation } from "@/components/article-shared";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "文章" };
+export async function generateMetadata() {
+  const { t } = await getI18n();
+  return { title: t("articles") };
+}
 export default async function ArticlesPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
+  const { t } = await getI18n();
   const page = articlePage((await searchParams).page);
   const articles = await listPublishedArticles(getDb(), page);
   return (
@@ -17,9 +22,10 @@ export default async function ArticlesPage({
       <div className="page-heading">
         <span className="eyebrow">WORDS THAT STAY</span>
         <h1>
-          文章<span className="brand-dot">.</span>
+          {t("articles")}
+          <span className="brand-dot">.</span>
         </h1>
-        <p>把思考写下来，把时间留住。</p>
+        <p>{t("articlesDescription")}</p>
         <ArticleNavigation />
       </div>
       <div className="draft-list">
@@ -29,18 +35,19 @@ export default async function ArticlesPage({
               <Link href={`/articles/${article.slug}`}>{article.title}</Link>
             </h2>
             <p>
-              作者：{article.authorName} · 发布于 <ArticleTime value={article.publishedAt} />
+              {t("byline", { author: article.authorName })}
+              <ArticleTime value={article.publishedAt} />
             </p>
             <Link className="button secondary" href={`/articles/${article.slug}`}>
-              阅读全文
+              {t("readMore")}
             </Link>
           </article>
         ))}
       </div>
       {!articles.length && (
         <section className="panel empty-state">
-          <h2>这里还没有已发布的文章</h2>
-          <p>草稿和待审核投稿不会出现在这里。</p>
+          <h2>{t("articlesEmpty")}</h2>
+          <p>{t("articlesEmptyDetails")}</p>
         </section>
       )}
       <ArticlePagination page={page} more={articles.length > 20} base="/articles" />

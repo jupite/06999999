@@ -6,6 +6,7 @@ import { ArticleError } from "@/server/domain/articles";
 import { DraftError } from "@/server/domain/drafts";
 import {
   submitArticle,
+  submitArticleEdit,
   reviewArticle,
   copyRejectedArticle,
   deletePublishedArticle,
@@ -31,6 +32,16 @@ export async function submitArticleAction(id: unknown, version: unknown) {
   try {
     const actor = await currentActor();
     const result = await getDb().$transaction((tx) => submitArticle(tx, actor, id, version));
+    refreshArticles(result.slug);
+    return { ok: true as const, ...result };
+  } catch (error) {
+    return failure(error);
+  }
+}
+export async function submitArticleEditAction(input: unknown) {
+  try {
+    const actor = await currentActor();
+    const result = await getDb().$transaction((tx) => submitArticleEdit(tx, actor, input));
     refreshArticles(result.slug);
     return { ok: true as const, ...result };
   } catch (error) {

@@ -3,33 +3,41 @@ import Link from "next/link";
 import { Navigation } from "@/components/navigation";
 import { MusicProvider } from "@/components/music-provider";
 import { authConfigured } from "@/server/auth";
+import { LocaleProvider } from "@/i18n/client";
+import { getI18n } from "@/i18n/server";
 import "./globals.css";
-export const metadata: Metadata = {
-  title: { default: "未命名的观测站", template: "%s · 观测站" },
-  description: "记录创作、日常与喜欢的一切。个人站基础预览。",
-  icons: { icon: "/favicon.svg" },
-};
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getI18n();
+  return {
+    title: { default: t("siteName"), template: `%s · ${t("siteShortName")}` },
+    description: t("siteDescription"),
+    icons: { icon: "/favicon.svg" },
+  };
+}
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { locale, t } = await getI18n();
   return (
-    <html lang="zh-CN">
+    <html lang={locale}>
       <body>
         <div className="ambient" aria-hidden="true" />
         <a href="#main" className="skip-link">
-          跳到正文
+          {t("skipToContent")}
         </a>
-        <MusicProvider>
-          <Navigation authEnabled={authConfigured()} />
-          <main id="main" className="site-main">
-            {children}
-          </main>
-          <footer className="footer">
-            <span>
-              未命名的观测站 <span className="muted"> / 名称暂定</span>
-            </span>
-            <span>在时间的缝隙里，收藏微光。</span>
-            <Link href="/about">关于这里</Link>
-          </footer>
-        </MusicProvider>
+        <LocaleProvider locale={locale}>
+          <MusicProvider>
+            <Navigation authEnabled={authConfigured()} />
+            <main id="main" className="site-main">
+              {children}
+            </main>
+            <footer className="footer">
+              <span>
+                {t("siteName")} <span className="muted"> / {t("workingTitle")}</span>
+              </span>
+              <span>{t("footerLine")}</span>
+              <Link href="/about">{t("aboutHere")}</Link>
+            </footer>
+          </MusicProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

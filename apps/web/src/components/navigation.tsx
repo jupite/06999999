@@ -3,16 +3,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon } from "lucide-react";
 import { AccountMenu } from "./account-menu";
-export const navigation = [
-  ["/", "首页"],
-  ["/projects", "项目"],
-  ["/articles", "文章"],
-  ["/photos", "照片墙"],
-  ["/music", "音乐"],
-  ["/friends", "友链"],
-  ["/about", "关于"],
+import { LanguageSwitcher } from "./language-switcher";
+import { useI18n } from "@/i18n/client";
+const navigation = [
+  ["/", "home"],
+  ["/projects", "projects"],
+  ["/articles", "articles"],
+  ["/photos", "photos"],
+  ["/music", "music"],
+  ["/friends", "friends"],
+  ["/about", "about"],
 ] as const;
 export function Navigation({ authEnabled }: { authEnabled: boolean }) {
+  const { t } = useI18n();
   const pathname = usePathname();
   return (
     <header className="site-header">
@@ -20,10 +23,11 @@ export function Navigation({ authEnabled }: { authEnabled: boolean }) {
         <Link className="brand" href="/">
           <Moon size={22} />
           <span>
-            未命名的观测站<span className="brand-dot">.</span>
+            {t("siteName")}
+            <span className="brand-dot">.</span>
           </span>
         </Link>
-        <nav aria-label="主导航">
+        <nav aria-label={t("primaryNav")}>
           {navigation.map(([href, label]) => (
             <Link
               key={href}
@@ -31,11 +35,14 @@ export function Navigation({ authEnabled }: { authEnabled: boolean }) {
               aria-current={pathname === href ? "page" : undefined}
               className={pathname === href ? "active" : ""}
             >
-              {label}
+              {t(label)}
             </Link>
           ))}
         </nav>
-        <AccountMenu enabled={authEnabled} />
+        <div className="header-actions">
+          <LanguageSwitcher />
+          <AccountMenu enabled={authEnabled} />
+        </div>
       </div>
     </header>
   );

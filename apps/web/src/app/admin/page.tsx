@@ -1,27 +1,29 @@
+import { getI18n } from "@/i18n/server";
 import { currentActor } from "@/server/auth";
 import { authorize } from "@/server/domain/permissions";
 import Link from "next/link";
 export const dynamic = "force-dynamic";
 export default async function AdminPage() {
+  const { t, system } = await getI18n();
   const actor = await currentActor();
   const access = authorize(actor, "site.manage");
   if (!access.allowed)
     return (
       <section className="panel empty-state">
-        <h1>{actor ? "无管理权限" : "管理入口"}</h1>
-        <p>{actor ? `你已登录，但当前账号无法访问管理后台：${access.reason}。` : access.reason}</p>
+        <h1>{actor ? t("noAdminAccess") : t("adminEntry")}</h1>
+        <p>{actor ? t("adminDenied", { reason: system(access.reason) }) : system(access.reason)}</p>
         <Link className="button" href="/login">
-          {actor ? "查看当前账户" : "前往登录"}
+          {actor ? t("viewAccount") : t("goLogin")}
         </Link>
       </section>
     );
   return (
     <section className="panel empty-state">
-      <h1>站点管理</h1>
+      <h1>{t("admin")}</h1>
       <Link className="button" href="/admin/reviews">
-        文章审核
+        {t("articleReview")}
       </Link>
-      <p>站主身份校验已通过。文章人工审核已开放；用户权限、上传额度和 AI 设置面板后续接入。</p>
+      <p>{t("adminDescription")}</p>
     </section>
   );
 }

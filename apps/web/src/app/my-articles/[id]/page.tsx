@@ -1,45 +1,81 @@
+import { getI18n } from "@/i18n/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { readMyArticle } from "@/server/services/articles";
 import { articleStateLabels } from "@/server/domain/articles";
+import { authorize } from "@/server/domain/permissions";
 import { ArticleBody } from "@/components/article-body";
 import { ArticleAccessNotice, ArticleNavigation } from "@/components/article-shared";
 import { CopyRejectedButton } from "@/components/article-controls";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "我的投稿" };
+export async function generateMetadata() {
+  const { t } = await getI18n();
+  return { title: t("mySubmission") };
+}
 export default async function MyArticlePage({ params }: { params: Promise<{ id: string }> }) {
+  const { t } = await getI18n();
   const actor = await currentActor();
   if (!actor || actor.banned)
-    return <ArticleAccessNotice signedIn={!!actor} reason={actor ? "账号已封禁" : "请先登录"} />;
+    return (
+      <ArticleAccessNotice signedIn={!!actor} reason={actor ? "账号已封禁" : t("signInRequired")} />
+    );
   const article = await readMyArticle(getDb(), actor, (await params).id);
   if (!article || !article.revisions[0]) notFound();
   const revision = article.revisions[0];
+  const published = article.publishedVersion !== null;
+  const canEditPublished =
+    published &&
+    (revision.state === "PUBLISHED" || revision.state === "REJECTED") &&
+    authorize(actor, "content.editOwn").allowed &&
+    authorize(actor, "post.submit").allowed;
   return (
     <>
       <ArticleNavigation active="mine" />
       <section className="panel draft-card">
         <h1>{revision.title}</h1>
-        <p>状态：{articleStateLabels[revision.state]}</p>
-        {revision.state === "PENDING_HUMAN" && <p>投稿已保存，等待站主人工审核，当前尚未公开。</p>}
+        <p>
+          {t("statusLabel", {
+            status:
+              published && revision.state !== "PUBLISHED"
+                ? t("editStatus", { status: t(articleStateLabels[revision.state]) })
+                : t(articleStateLabels[revision.state]),
+          })}
+        </p>
+        {revision.state === "PENDING_HUMAN" && (
+          <p>{published ? t("editUnderReview") : t("submissionUnderReview")}</p>
+        )}
         {revision.state === "REJECTED" && (
           <>
             <p className="notice">
-              拒绝原因：{revision.reviews[0]?.reason ?? "请联系站主了解审核意见。"}
+              {t("rejectionReason", {
+                reason: revision.reviews[0]?.reason ?? t("rejectionReasonFallback"),
+              })}
             </p>
-            <CopyRejectedButton id={article.id} version={article.currentVersion} />
-            <p>复制后可编辑并重新投稿，原审核记录会保留。</p>
+            {published ? (
+              <p>{t("previousVersionVisible")}</p>
+            ) : (
+              <>
+                <CopyRejectedButton id={article.id} version={article.currentVersion} />
+                <p>{t("copyRejectedHelp")}</p>
+              </>
+            )}
           </>
         )}
         {revision.state === "DRAFT" && (
           <Link className="button" href={`/write?id=${article.id}`}>
-            继续编辑
+            {t("continueEditing")}
           </Link>
         )}
-        {revision.state === "PUBLISHED" && (
+        {canEditPublished && (
+          <Link className="button" href={`/write?id=${article.id}`}>
+            {revision.state === "REJECTED" ? t("editAndResubmit") : t("editArticle")}
+          </Link>
+        )}
+        {published && (
           <Link className="button" href={`/articles/${article.slug}`}>
-            查看公开文章
+            {t("viewPublished")}
           </Link>
         )}
         <ArticleBody markdown={revision.markdown} />

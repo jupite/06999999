@@ -1,5 +1,6 @@
+import { getI18n } from "@/i18n/server";
 import Link from "next/link";
-export function ArticlePagination({
+export async function ArticlePagination({
   page,
   more,
   base,
@@ -8,68 +9,78 @@ export function ArticlePagination({
   more: boolean;
   base: string;
 }) {
+  const { t } = await getI18n();
   return (
-    <nav className="draft-actions" aria-label="分页">
+    <nav className="draft-actions" aria-label={t("pagination")}>
       {page > 1 && (
         <Link
           className="button secondary"
           href={`${base}${base.includes("?") ? "&" : "?"}page=${page - 1}`}
         >
-          上一页
+          {t("previousPage")}
         </Link>
       )}
-      <span>第 {page} 页</span>
+      <span>{t("pageNumber", { page })}</span>
       {more && (
         <Link
           className="button secondary"
           href={`${base}${base.includes("?") ? "&" : "?"}page=${page + 1}`}
         >
-          下一页
+          {t("nextPage")}
         </Link>
       )}
     </nav>
   );
 }
-export function ArticleAccessNotice({ reason, signedIn }: { reason: string; signedIn: boolean }) {
+export async function ArticleAccessNotice({
+  reason,
+  signedIn,
+}: {
+  reason: string;
+  signedIn: boolean;
+}) {
+  const { t, system } = await getI18n();
   return (
     <section className="panel empty-state">
-      <h1>{signedIn ? "无访问权限" : "请先登录"}</h1>
-      <p>{reason}</p>
+      <h1>{signedIn ? t("noAccess") : t("signInRequired")}</h1>
+      <p>{system(reason)}</p>
       <Link className="button" href="/login">
-        {signedIn ? "查看当前账户" : "前往登录"}
+        {signedIn ? t("viewAccount") : t("goLogin")}
       </Link>
     </section>
   );
 }
-export function ArticleTime({ value }: { value: Date }) {
+export async function ArticleTime({ value }: { value: Date }) {
+  const { locale, t } = await getI18n();
   return (
     <time dateTime={value.toISOString()}>
-      {new Intl.DateTimeFormat("zh-CN", {
+      {new Intl.DateTimeFormat(locale, {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone: "Asia/Taipei",
       }).format(value)}
-      （UTC+8）
+      {t("timeZoneLabel")}
     </time>
   );
 }
 
-export function ArticleNavigation({ active }: { active?: "write" | "mine" }) {
+export async function ArticleNavigation({ active }: { active?: "write" | "mine" }) {
+  const { t } = await getI18n();
   return (
-    <nav className="article-navigation" aria-label="文章功能">
+    <nav className="article-navigation" aria-label={t("articleNav")}>
       <Link
         href="/write"
         className={active === "write" ? "button" : "button secondary"}
         aria-current={active === "write" ? "page" : undefined}
       >
-        写文章
+        {t("writeArticle")}
       </Link>
       <Link
         href="/my-articles"
         className={active === "mine" ? "button" : "button secondary"}
         aria-current={active === "mine" ? "page" : undefined}
       >
-        我的文章
+        {t("myArticles")}
       </Link>
     </nav>
   );

@@ -23,21 +23,21 @@ export function articlePage(value: unknown) {
   const n = typeof value === "string" && /^\d+$/.test(value) ? Number(value) : 1;
   return Number.isSafeInteger(n) && n > 0 && n <= 100000 ? n : 1;
 }
-export const articleStateLabels: Record<string, string> = {
-  DRAFT: "草稿",
-  PENDING_AI: "等待 AI 审核",
-  PENDING_HUMAN: "等待人工审核",
-  PUBLISHED: "已发布",
-  REJECTED: "已拒绝",
-  WITHDRAWN: "已撤回",
-};
+export const articleStateLabels = {
+  DRAFT: "draftState",
+  PENDING_AI: "pendingAIState",
+  PENDING_HUMAN: "pendingHumanState",
+  PUBLISHED: "publishedState",
+  REJECTED: "rejectedState",
+  WITHDRAWN: "withdrawnState",
+} as const;
 
 export const articleFilters = {
-  all: "全部",
-  draft: "草稿",
-  pending: "待审核",
-  published: "已发布",
-  rejected: "已拒绝",
+  all: "allFilter",
+  draft: "draftFilter",
+  pending: "pendingFilter",
+  published: "publishedFilter",
+  rejected: "rejectedFilter",
 } as const;
 export type ArticleFilter = keyof typeof articleFilters;
 export function articleFilter(value: unknown): ArticleFilter {

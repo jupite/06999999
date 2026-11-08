@@ -1,4 +1,6 @@
 "use client";
+
+import { useI18n, type Notice } from "@/i18n/client";
 import { useState, useTransition } from "react";
 import { deleteDraftAction } from "@/app/write/actions";
 export function DeleteDraftButton({
@@ -10,29 +12,30 @@ export function DeleteDraftButton({
   version: number;
   title: string;
 }) {
+  const { t, notice } = useI18n();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Notice | null>(null);
   return (
     <div>
       <button
         className="button secondary"
         disabled={pending}
         onClick={() => {
-          if (!window.confirm(`确定删除草稿“${title}”吗？删除后无法恢复。`)) return;
-          setError("");
+          if (!window.confirm(t("confirmDeleteDraft", { title }))) return;
+          setError(null);
           startTransition(async () => {
             try {
               const result = await deleteDraftAction(id, version);
-              if (!result.ok) setError(result.error);
+              if (!result.ok) setError({ system: result.error });
             } catch {
-              setError("网络异常，请刷新确认删除结果。");
+              setError("deleteDraftNetworkError");
             }
           });
         }}
       >
-        {pending ? "正在删除…" : "删除草稿"}
+        {pending ? t("deleting") : t("deleteDraft")}
       </button>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{notice(error)}</p>}
     </div>
   );
 }
