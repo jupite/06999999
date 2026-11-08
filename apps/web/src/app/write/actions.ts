@@ -16,10 +16,7 @@ export async function saveDraftAction(input: unknown) {
   } catch (error) {
     return {
       ok: false as const,
-      error:
-        error instanceof DraftError
-          ? error.message
-          : "保存失败，请稍后重试；当前输入仍保留在页面中。",
+      error: error instanceof DraftError ? error.notice : ("draftSaveFailed" as const),
     };
   }
 }
@@ -33,7 +30,7 @@ export async function deleteDraftAction(id: unknown, version: unknown) {
   } catch (error) {
     return {
       ok: false as const,
-      error: error instanceof DraftError ? error.message : "删除失败，请稍后重试。",
+      error: error instanceof DraftError ? error.notice : ("draftDeleteFailed" as const),
     };
   }
 }

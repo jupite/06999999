@@ -14,7 +14,7 @@ function scope(actor: Actor): Prisma.ContentWhereInput {
   };
 }
 export async function listDrafts(db: Db, actor: Actor) {
-  if (actor.banned) throw new DraftError("账号已封禁");
+  if (actor.banned) throw new DraftError("accountBanned");
   return db.content.findMany({
     where: scope(actor),
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
@@ -28,7 +28,7 @@ export async function listDrafts(db: Db, actor: Actor) {
   });
 }
 export async function readDraft(db: Db, actor: Actor, id: string) {
-  if (actor.banned) throw new DraftError("账号已封禁");
+  if (actor.banned) throw new DraftError("accountBanned");
   const content = await db.content.findFirst({
     where: { ...scope(actor), id },
     include: { revisions: { orderBy: { version: "desc" }, take: 1 } },
@@ -61,8 +61,7 @@ export async function saveDraft(db: Db, actor: Actor | null, value: unknown) {
     where: { ...scope(author), id: input.id, currentVersion: input.version },
     data: { currentVersion: { increment: 1 }, updatedAt: new Date() },
   });
-  if (updated.count !== 1)
-    throw new DraftError("草稿不可编辑或已有更新。请保留当前正文，再重新打开草稿。");
+  if (updated.count !== 1) throw new DraftError("draftEditConflict");
   await db.contentRevision.create({
     data: {
       contentId: input.id,
@@ -82,9 +81,9 @@ export async function deleteDraft(db: Db, actor: Actor | null, id: unknown, vers
     !Number.isSafeInteger(version) ||
     version < 1
   )
-    throw new DraftError("草稿编号或版本无效。");
+    throw new DraftError("invalidDraftReference");
   const result = await db.content.deleteMany({
     where: { ...scope(author), id, currentVersion: version },
   });
-  if (result.count !== 1) throw new DraftError("草稿不存在、已有更新或不可删除，请刷新列表。");
+  if (result.count !== 1) throw new DraftError("draftDeleteConflict");
 }

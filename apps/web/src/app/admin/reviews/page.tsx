@@ -16,10 +16,11 @@ export default async function ReviewsPage({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
-  const { t } = await getI18n();
+  const { t, system } = await getI18n();
   const actor = await currentActor();
   const access = authorize(actor, "site.manage");
-  if (!access.allowed) return <ArticleAccessNotice signedIn={!!actor} reason={access.reason} />;
+  if (!access.allowed)
+    return <ArticleAccessNotice signedIn={!!actor} reason={system(access.reason)} />;
   const page = articlePage((await searchParams).page);
   const articles = await listPendingArticles(getDb(), actor, page);
   return (

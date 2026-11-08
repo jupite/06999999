@@ -2,11 +2,11 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { getTranslator, type Dictionary, type Locale, type MessageKey } from "./messages";
-import { getSystemTranslator } from "./system-messages";
+import { getSystemTranslator, type SystemNotice } from "./system-messages";
 
 type LocaleData = { locale: Locale; dictionary: Dictionary };
 const LocaleContext = createContext<LocaleData | null>(null);
-export type Notice = MessageKey | { system: string };
+export type Notice = MessageKey | { system: SystemNotice };
 
 export function LocaleProvider({
   locale,

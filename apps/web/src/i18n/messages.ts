@@ -6,7 +6,7 @@ export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "zh-CN";
 
 export type MessageKey = keyof typeof chinese.messages | keyof typeof english.messages;
-type SystemKey = keyof typeof chinese.system | keyof typeof english.system;
+export type SystemKey = keyof typeof chinese.system | keyof typeof english.system;
 
 export type Dictionary = {
   messages: Record<MessageKey, string>;

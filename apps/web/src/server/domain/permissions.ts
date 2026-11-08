@@ -1,3 +1,5 @@
+import type { SystemKey } from "../../i18n/messages";
+
 export const capabilities = [
   "post.submit",
   "project.submit",
@@ -17,18 +19,23 @@ export type Actor = {
   banned: boolean;
   overrides: Partial<Record<Capability, "ALLOW" | "DENY">>;
 };
-export function authorize(actor: Actor | null, capability: Capability, ownerId?: string) {
-  if (!actor) return { allowed: false, reason: "请先登录" };
-  if (actor.banned) return { allowed: false, reason: "账号已封禁" };
-  if (actor.overrides[capability] === "DENY") return { allowed: false, reason: "该权限已被禁止" };
+export function authorize(
+  actor: Actor | null,
+  capability: Capability,
+  ownerId?: string,
+): { allowed: boolean; reason: SystemKey } {
+  if (!actor) return { allowed: false, reason: "loginRequired" };
+  if (actor.banned) return { allowed: false, reason: "accountBanned" };
+  if (actor.overrides[capability] === "DENY") return { allowed: false, reason: "permissionDenied" };
   if (capability === "site.manage" && actor.role !== "OWNER")
-    return { allowed: false, reason: "仅站主可操作" };
+    return { allowed: false, reason: "ownerOnly" };
   if (ownerId && actor.id !== ownerId && actor.role !== "OWNER")
-    return { allowed: false, reason: "只能操作自己的内容" };
-  if (actor.role === "OWNER") return { allowed: true, reason: "站主权限" };
-  if (actor.overrides[capability] === "ALLOW") return { allowed: true, reason: "用户白名单" };
-  if (capability === "image.upload") return { allowed: false, reason: "需要站主授权图片上传" };
-  return { allowed: true, reason: "普通用户默认权限" };
+    return { allowed: false, reason: "ownershipRequired" };
+  if (actor.role === "OWNER") return { allowed: true, reason: "ownerPermission" };
+  if (actor.overrides[capability] === "ALLOW")
+    return { allowed: true, reason: "permissionGranted" };
+  if (capability === "image.upload") return { allowed: false, reason: "imagePermissionRequired" };
+  return { allowed: true, reason: "memberPermission" };
 }
 export function withinQuota(used: bigint, reserved: bigint, requested: bigint, limit: bigint) {
   return (

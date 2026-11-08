@@ -17,7 +17,7 @@ function requireActor(actor: Actor | null, manage = false): Actor {
   return actor;
 }
 function requireReader(actor: Actor | null): Actor {
-  if (!actor || actor.banned) throw new ArticleError(actor ? "账号已封禁" : "请先登录");
+  if (!actor || actor.banned) throw new ArticleError(actor ? "accountBanned" : "loginRequired");
   return actor;
 }
 // All writes must run inside a transaction. Claim the content row before changing a revision.
@@ -40,13 +40,13 @@ export async function submitArticle(
     },
     data: { updatedAt: new Date() },
   });
-  if (claimed.count !== 1) throw new ArticleError("文章已更新、已提交或不可操作，请刷新后重试。");
+  if (claimed.count !== 1) throw new ArticleError("articleSubmitConflict");
   const revision = await db.contentRevision.findUniqueOrThrow({
     where: { contentId_version: { contentId: id, version } },
   });
-  if (revision.state !== "DRAFT") throw new ArticleError("文章已经提交，请刷新状态。");
+  if (revision.state !== "DRAFT") throw new ArticleError("articleAlreadySubmitted");
   if (!revision.title.trim() || !revision.markdown.trim())
-    throw new ArticleError("请先保存非空的标题和正文，再提交。");
+    throw new ArticleError("articleContentRequired");
   const state = author.role === "OWNER" ? "PUBLISHED" : "PENDING_HUMAN";
   await db.contentRevision.update({ where: { id: revision.id }, data: { state } });
   const content = await db.content.update({
@@ -81,7 +81,7 @@ export async function submitArticleEdit(db: Db, actor: Actor | null, value: unkn
   if (!access.allowed) throw new ArticleError(access.reason);
   const input = parseDraft(value);
   const { id, version } = articleReference(input.id, input.version);
-  if (!input.markdown.trim()) throw new ArticleError("请填写正文再提交。");
+  if (!input.markdown.trim()) throw new ArticleError("articleBodyRequired");
 
   const state = author.role === "OWNER" ? "PUBLISHED" : "PENDING_HUMAN";
   const nextVersion = version + 1;
@@ -99,7 +99,7 @@ export async function submitArticleEdit(db: Db, actor: Actor | null, value: unkn
       ...(state === "PUBLISHED" && { publishedVersion: nextVersion }),
     },
   });
-  if (claimed.count !== 1) throw new ArticleError("文章版本已变化或不可编辑，请重新打开后重试。");
+  if (claimed.count !== 1) throw new ArticleError("articleEditConflict");
   const revision = await db.contentRevision.create({
     data: {
       contentId: id,
@@ -153,7 +153,7 @@ export async function reviewArticle(
     },
     data: { updatedAt: new Date() },
   });
-  if (claimed.count !== 1) throw new ArticleError("该版本已审核或已发生变化，请刷新审核列表。");
+  if (claimed.count !== 1) throw new ArticleError("articleReviewConflict");
   const content = await db.content.findUniqueOrThrow({
     where: { id },
     include: { author: { include: { permissions: true } } },
@@ -161,7 +161,7 @@ export async function reviewArticle(
   const pending = await db.contentRevision.findUniqueOrThrow({
     where: { contentId_version: { contentId: id, version } },
   });
-  if (pending.state !== "PENDING_HUMAN") throw new ArticleError("该版本已经审核，请刷新列表。");
+  if (pending.state !== "PENDING_HUMAN") throw new ArticleError("articleAlreadyReviewed");
   if (input.decision === "approve") {
     const author = content.author;
     const access = authorize(
@@ -174,7 +174,7 @@ export async function reviewArticle(
       "post.submit",
     );
     if (!access.allowed)
-      throw new ArticleError(`作者当前不能发布：${access.reason}。可填写原因拒绝该投稿。`);
+      throw new ArticleError({ key: "authorCannotPublish", reason: access.reason });
   }
   const state = input.decision === "approve" ? "PUBLISHED" : "REJECTED";
   const revision = await db.contentRevision.update({
@@ -226,7 +226,7 @@ export async function copyRejectedArticle(
     include: { revisions: { where: { version, state: "REJECTED" } } },
   });
   const revision = source?.revisions[0];
-  if (!revision) throw new ArticleError("找不到可复制的本人已拒绝投稿。");
+  if (!revision) throw new ArticleError("rejectedArticleMissing");
   const draft = await saveDraft(db, author, {
     version: 0,
     title: revision.title,
@@ -382,7 +382,7 @@ export async function deletePublishedArticle(
     where: { id, authorId: author.id, kind: "POST", currentVersion: version },
     select: { publishedVersion: true, slug: true },
   });
-  const conflict = "文章已删除、版本已变化或无权操作，请刷新列表。";
+  const conflict = "articleDeleteConflict";
   if (!content || content.publishedVersion === null) throw new ArticleError(conflict);
   const { publishedVersion } = content;
   const claimed = await db.content.updateMany({

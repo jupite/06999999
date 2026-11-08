@@ -27,7 +27,7 @@ export default async function MyArticlesPage({
 }: {
   searchParams: Promise<{ page?: string; status?: string }>;
 }) {
-  const { t } = await getI18n();
+  const { t, system } = await getI18n();
   const actor = await currentActor();
   if (!actor || actor.banned)
     return (
@@ -35,7 +35,7 @@ export default async function MyArticlesPage({
         <ArticleNavigation active="mine" />
         <ArticleAccessNotice
           signedIn={!!actor}
-          reason={actor ? "账号已封禁" : t("signInForArticles")}
+          reason={actor ? system("accountBanned") : t("signInForArticles")}
         />
       </>
     );

@@ -1,4 +1,13 @@
-export class ArticleError extends Error {}
+import type { SystemNotice } from "../../i18n/system-messages";
+
+export class ArticleError extends Error {
+  readonly notice: SystemNotice;
+
+  constructor(notice: SystemNotice) {
+    super(typeof notice === "string" ? notice : notice.key);
+    this.notice = notice;
+  }
+}
 export function articleReference(id: unknown, version: unknown) {
   if (
     typeof id !== "string" ||
@@ -8,15 +17,15 @@ export function articleReference(id: unknown, version: unknown) {
     !Number.isSafeInteger(version) ||
     version < 1
   )
-    throw new ArticleError("文章编号或版本无效。");
+    throw new ArticleError("invalidArticleReference");
   return { id, version };
 }
 export function reviewInput(decision: unknown, reason: unknown) {
-  if (decision !== "approve" && decision !== "reject") throw new ArticleError("审核操作无效。");
+  if (decision !== "approve" && decision !== "reject")
+    throw new ArticleError("invalidReviewDecision");
   if (typeof reason !== "string" || reason.trim().length > 2000)
-    throw new ArticleError("审核说明不能超过 2000 字。");
-  if (decision === "reject" && !reason.trim())
-    throw new ArticleError("请填写拒绝原因，帮助作者修改。");
+    throw new ArticleError("reviewReasonTooLong");
+  if (decision === "reject" && !reason.trim()) throw new ArticleError("reviewReasonRequired");
   return { decision, reason: reason.trim() };
 }
 export function articlePage(value: unknown) {

@@ -253,11 +253,19 @@ test("article filters, edits and deletion respect ownership and published revisi
           const original = await submitArticle(tx, member, toPublish.id, toPublish.version);
           await reviewArticle(tx, actor, toPublish.id, toPublish.version, "approve", "");
           const edit = { ...toPublish, title: "修改标题", markdown: "待审核的新正文" };
-          await assert.rejects(submitArticleEdit(tx, actor, edit), /不可编辑/);
-          await assert.rejects(submitArticleEdit(tx, member, { ...edit, markdown: " " }), /正文/);
+          await assert.rejects(submitArticleEdit(tx, actor, edit), {
+            message: "articleEditConflict",
+          });
+          await assert.rejects(submitArticleEdit(tx, member, { ...edit, markdown: " " }), {
+            message: "articleBodyRequired",
+          });
           assert.equal((await submitArticleEdit(tx, member, edit)).state, "PENDING_HUMAN");
-          await assert.rejects(submitArticleEdit(tx, member, edit), /版本已变化/);
-          await assert.rejects(submitArticleEdit(tx, member, { ...edit, version: 2 }), /不可编辑/);
+          await assert.rejects(submitArticleEdit(tx, member, edit), {
+            message: "articleEditConflict",
+          });
+          await assert.rejects(submitArticleEdit(tx, member, { ...edit, version: 2 }), {
+            message: "articleEditConflict",
+          });
           assert.equal(
             (await readPublishedArticle(tx, original.slug))?.markdown,
             toPublish.markdown,

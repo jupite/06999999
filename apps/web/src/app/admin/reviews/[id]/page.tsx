@@ -14,10 +14,11 @@ export async function generateMetadata() {
   return { title: t("reviewSubmission") };
 }
 export default async function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
-  const { t } = await getI18n();
+  const { t, system } = await getI18n();
   const actor = await currentActor();
   const access = authorize(actor, "site.manage");
-  if (!access.allowed) return <ArticleAccessNotice signedIn={!!actor} reason={access.reason} />;
+  if (!access.allowed)
+    return <ArticleAccessNotice signedIn={!!actor} reason={system(access.reason)} />;
   const article = await readPendingArticle(getDb(), actor, (await params).id);
   if (!article)
     return (

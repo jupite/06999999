@@ -24,8 +24,8 @@ function failure(error: unknown) {
     ok: false as const,
     error:
       error instanceof ArticleError || error instanceof DraftError
-        ? error.message
-        : "操作失败，请稍后重试。",
+        ? error.notice
+        : ("articleActionFailed" as const),
   };
 }
 export async function submitArticleAction(id: unknown, version: unknown) {

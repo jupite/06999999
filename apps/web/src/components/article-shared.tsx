@@ -39,11 +39,11 @@ export async function ArticleAccessNotice({
   reason: string;
   signedIn: boolean;
 }) {
-  const { t, system } = await getI18n();
+  const { t } = await getI18n();
   return (
     <section className="panel empty-state">
       <h1>{signedIn ? t("noAccess") : t("signInRequired")}</h1>
-      <p>{system(reason)}</p>
+      <p>{reason}</p>
       <Link className="button" href="/login">
         {signedIn ? t("viewAccount") : t("goLogin")}
       </Link>

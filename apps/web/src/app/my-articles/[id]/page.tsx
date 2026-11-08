@@ -15,11 +15,14 @@ export async function generateMetadata() {
   return { title: t("mySubmission") };
 }
 export default async function MyArticlePage({ params }: { params: Promise<{ id: string }> }) {
-  const { t } = await getI18n();
+  const { t, system } = await getI18n();
   const actor = await currentActor();
   if (!actor || actor.banned)
     return (
-      <ArticleAccessNotice signedIn={!!actor} reason={actor ? "账号已封禁" : t("signInRequired")} />
+      <ArticleAccessNotice
+        signedIn={!!actor}
+        reason={actor ? system("accountBanned") : t("signInRequired")}
+      />
     );
   const article = await readMyArticle(getDb(), actor, (await params).id);
   if (!article || !article.revisions[0]) notFound();
