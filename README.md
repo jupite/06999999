@@ -18,7 +18,7 @@ pnpm dev
 
 页面顶部可切换简体中文和 English。默认使用简体中文，选择会保存在当前浏览器。原有页面与文章地址可以继续使用，用户撰写的内容按原文展示。
 
-界面文案集中在 `apps/web/src/i18n/messages.ts`。页面在服务端根据语言 Cookie 渲染，登录、编辑和审核控件沿用同一语言偏好。
+界面文案和系统提示保存在 `apps/web/src/i18n/dictionaries/` 下的 `zh.json` 和 `en.json`。语言与词典的映射、加载方式和维护步骤见[当前 i18n 方案](doc/i18n.md)。
 
 ## 本地数据库
 

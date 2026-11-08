@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { locale, t } = await getI18n();
+  const { locale, dictionary, t } = await getI18n();
   return (
     <html lang={locale}>
       <body>
@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <a href="#main" className="skip-link">
           {t("skipToContent")}
         </a>
-        <LocaleProvider locale={locale}>
+        <LocaleProvider locale={locale} dictionary={dictionary}>
           <MusicProvider>
             <Navigation authEnabled={authConfigured()} />
             <main id="main" className="site-main">
