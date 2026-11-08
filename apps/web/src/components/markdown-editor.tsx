@@ -43,12 +43,12 @@ export function MarkdownEditor({
     <>
       <div className="editor-toolbar">
         <Link
-          href="/drafts"
+          href="/my-articles?status=draft"
           onClick={(event) => {
             if (dirty && !window.confirm("有未保存的修改，仍要离开吗？")) event.preventDefault();
           }}
         >
-          ← 我的草稿
+          ← 返回草稿列表
         </Link>
         <span>{dirty ? "有未保存的修改" : draft.id ? "已保存至数据库" : "新草稿"}</span>
       </div>
@@ -66,7 +66,7 @@ export function MarkdownEditor({
               }
               setDraft(result.draft);
               setDirty(false);
-              setMessage("已保存至数据库，可在我的草稿中重新打开。");
+              setMessage("已保存至数据库，可在我的文章的草稿筛选中重新打开。");
               if (!draft.id)
                 router.replace(`/write?id=${encodeURIComponent(result.draft.id)}`, {
                   scroll: false,

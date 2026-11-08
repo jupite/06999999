@@ -4,7 +4,12 @@ import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { ArticleError } from "@/server/domain/articles";
 import { DraftError } from "@/server/domain/drafts";
-import { submitArticle, reviewArticle, copyRejectedArticle } from "@/server/services/articles";
+import {
+  submitArticle,
+  reviewArticle,
+  copyRejectedArticle,
+  deletePublishedArticle,
+} from "@/server/services/articles";
 
 function refreshArticles(slug?: string) {
   for (const path of ["/drafts", "/my-articles", "/articles", "/admin/reviews"])
@@ -55,6 +60,19 @@ export async function copyRejectedArticleAction(id: unknown, version: unknown) {
     const draft = await getDb().$transaction((tx) => copyRejectedArticle(tx, actor, id, version));
     refreshArticles();
     return { ok: true as const, id: draft.id };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function deletePublishedArticleAction(id: unknown, version: unknown) {
+  try {
+    const actor = await currentActor();
+    const result = await getDb().$transaction((tx) =>
+      deletePublishedArticle(tx, actor, id, version),
+    );
+    refreshArticles(result.slug);
+    return { ok: true as const };
   } catch (error) {
     return failure(error);
   }

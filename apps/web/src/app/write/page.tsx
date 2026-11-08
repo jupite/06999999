@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArticleNavigation } from "@/components/article-shared";
 import { notFound } from "next/navigation";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { currentActor } from "@/server/auth";
@@ -49,6 +50,7 @@ export default async function WritePage({
           写下此刻<span className="brand-dot">.</span>
         </h1>
         <p>从一句话开始，不必急着完成。</p>
+        <ArticleNavigation active="write" />
       </div>
       <MarkdownEditor
         key={id ?? "new"}

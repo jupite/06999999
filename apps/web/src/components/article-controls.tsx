@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   submitArticleAction,
+  deletePublishedArticleAction,
   reviewArticleAction,
   copyRejectedArticleAction,
 } from "@/app/articles/actions";
@@ -150,6 +151,53 @@ export function CopyRejectedButton({ id, version }: { id: string; version: numbe
         }}
       >
         {pending ? "正在复制…" : "复制为新草稿修改"}
+      </button>
+      {error && <p role="alert">{error}</p>}
+    </div>
+  );
+}
+
+export function DeletePublishedArticleButton({
+  id,
+  version,
+  title,
+}: {
+  id: string;
+  version: number;
+  title: string;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState("");
+  const router = useRouter();
+  return (
+    <div>
+      <button
+        type="button"
+        className="button secondary"
+        disabled={pending}
+        onClick={() => {
+          if (
+            !window.confirm(
+              `确定删除已发布文章“${title}”吗？删除后不再公开，也不会显示在我的文章中；审核记录保留，暂不提供恢复入口。`,
+            )
+          )
+            return;
+          setError("");
+          startTransition(async () => {
+            try {
+              const result = await deletePublishedArticleAction(id, version);
+              if (!result.ok) {
+                setError(result.error);
+                return;
+              }
+              router.refresh();
+            } catch {
+              setError("网络异常，请刷新列表确认删除结果。");
+            }
+          });
+        }}
+      >
+        {pending ? "正在删除…" : "删除文章"}
       </button>
       {error && <p role="alert">{error}</p>}
     </div>

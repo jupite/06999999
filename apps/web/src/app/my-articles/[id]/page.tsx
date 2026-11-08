@@ -5,7 +5,7 @@ import { getDb } from "@/server/db";
 import { readMyArticle } from "@/server/services/articles";
 import { articleStateLabels } from "@/server/domain/articles";
 import { ArticleBody } from "@/components/article-body";
-import { ArticleAccessNotice } from "@/components/article-shared";
+import { ArticleAccessNotice, ArticleNavigation } from "@/components/article-shared";
 import { CopyRejectedButton } from "@/components/article-controls";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "我的投稿" };
@@ -18,7 +18,7 @@ export default async function MyArticlePage({ params }: { params: Promise<{ id: 
   const revision = article.revisions[0];
   return (
     <>
-      <Link href="/my-articles">← 我的文章</Link>
+      <ArticleNavigation active="mine" />
       <section className="panel draft-card">
         <h1>{revision.title}</h1>
         <p>状态：{articleStateLabels[revision.state]}</p>

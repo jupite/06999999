@@ -31,3 +31,17 @@ export const articleStateLabels: Record<string, string> = {
   REJECTED: "已拒绝",
   WITHDRAWN: "已撤回",
 };
+
+export const articleFilters = {
+  all: "全部",
+  draft: "草稿",
+  pending: "待审核",
+  published: "已发布",
+  rejected: "已拒绝",
+} as const;
+export type ArticleFilter = keyof typeof articleFilters;
+export function articleFilter(value: unknown): ArticleFilter {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(articleFilters, value)
+    ? (value as ArticleFilter)
+    : "all";
+}

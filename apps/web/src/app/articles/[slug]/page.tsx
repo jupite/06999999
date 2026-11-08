@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/server/db";
 import { readPublishedArticle } from "@/server/services/articles";
 import { ArticleBody } from "@/components/article-body";
-import { ArticleTime } from "@/components/article-shared";
+import { ArticleTime, ArticleNavigation } from "@/components/article-shared";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const article = await readPublishedArticle(getDb(), (await params).slug);
@@ -14,6 +14,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound();
   return (
     <>
+      <ArticleNavigation />
       <Link href="/articles">← 返回文章列表</Link>
       <article className="panel draft-card">
         <h1>{article.title}</h1>

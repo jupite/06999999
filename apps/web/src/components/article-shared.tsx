@@ -11,13 +11,19 @@ export function ArticlePagination({
   return (
     <nav className="draft-actions" aria-label="分页">
       {page > 1 && (
-        <Link className="button secondary" href={`${base}?page=${page - 1}`}>
+        <Link
+          className="button secondary"
+          href={`${base}${base.includes("?") ? "&" : "?"}page=${page - 1}`}
+        >
           上一页
         </Link>
       )}
       <span>第 {page} 页</span>
       {more && (
-        <Link className="button secondary" href={`${base}?page=${page + 1}`}>
+        <Link
+          className="button secondary"
+          href={`${base}${base.includes("?") ? "&" : "?"}page=${page + 1}`}
+        >
           下一页
         </Link>
       )}
@@ -45,5 +51,26 @@ export function ArticleTime({ value }: { value: Date }) {
       }).format(value)}
       （UTC+8）
     </time>
+  );
+}
+
+export function ArticleNavigation({ active }: { active?: "write" | "mine" }) {
+  return (
+    <nav className="article-navigation" aria-label="文章功能">
+      <Link
+        href="/write"
+        className={active === "write" ? "button" : "button secondary"}
+        aria-current={active === "write" ? "page" : undefined}
+      >
+        写文章
+      </Link>
+      <Link
+        href="/my-articles"
+        className={active === "mine" ? "button" : "button secondary"}
+        aria-current={active === "mine" ? "page" : undefined}
+      >
+        我的文章
+      </Link>
+    </nav>
   );
 }

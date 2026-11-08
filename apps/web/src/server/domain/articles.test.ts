@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { articleReference, reviewInput, articlePage } from "./articles.ts";
+import { articleReference, reviewInput, articlePage, articleFilter } from "./articles.ts";
 test("article references require a valid version and rejection requires a reason", () => {
   for (const args of [
     [null, 1],
@@ -18,4 +18,10 @@ test("article references require a valid version and rejection requires a reason
   assert.equal(articlePage("2"), 2);
   for (const page of ["0", "-1", "1.5", "Infinity", ["1"], "100001", undefined])
     assert.equal(articlePage(page), 1);
+});
+
+test("unknown article filters use all rather than object prototype keys", () => {
+  assert.equal(articleFilter("draft"), "draft");
+  for (const value of ["__proto__", "constructor", "bad", null, ["published"]])
+    assert.equal(articleFilter(value), "all");
 });

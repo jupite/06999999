@@ -1,7 +1,12 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { authorize, type Actor } from "../domain/permissions";
-import { ArticleError, articleReference, reviewInput } from "../domain/articles";
+import {
+  ArticleError,
+  articleReference,
+  reviewInput,
+  type ArticleFilter,
+} from "../domain/articles";
 import { saveDraft } from "./drafts";
 
 type Db = Prisma.TransactionClient;
@@ -184,10 +189,35 @@ const latestRevision = {
   take: 1,
   include: { reviews: { orderBy: { createdAt: "desc" as const }, take: 1 } },
 };
-export async function listMyArticles(db: Db, actor: Actor | null, page = 1) {
+export async function listMyArticles(
+  db: Db,
+  actor: Actor | null,
+  page = 1,
+  filter: ArticleFilter = "all",
+) {
   const author = requireReader(actor);
   return db.content.findMany({
-    where: { authorId: author.id, kind: "POST" },
+    where: {
+      authorId: author.id,
+      kind: "POST",
+      revisions: { none: { state: "WITHDRAWN" } },
+      AND:
+        filter === "draft"
+          ? {
+              publishedVersion: null,
+              revisions: { some: { state: "DRAFT" }, every: { state: "DRAFT" } },
+            }
+          : filter === "published"
+            ? { publishedVersion: { not: null } }
+            : filter === "pending"
+              ? {
+                  publishedVersion: null,
+                  revisions: { some: { state: { in: ["PENDING_AI", "PENDING_HUMAN"] } } },
+                }
+              : filter === "rejected"
+                ? { publishedVersion: null, revisions: { some: { state: "REJECTED" } } }
+                : {},
+    },
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     skip: (page - 1) * 20,
     take: 21,
@@ -197,7 +227,7 @@ export async function listMyArticles(db: Db, actor: Actor | null, page = 1) {
 export async function readMyArticle(db: Db, actor: Actor | null, id: string) {
   const author = requireReader(actor);
   return db.content.findFirst({
-    where: { id, authorId: author.id, kind: "POST" },
+    where: { id, authorId: author.id, kind: "POST", revisions: { none: { state: "WITHDRAWN" } } },
     include: { revisions: latestRevision },
   });
 }
@@ -278,4 +308,53 @@ export async function readPublishedArticle(db: Db, slug: string) {
     select: publicSelect,
   });
   return content ? published(content) : null;
+}
+
+// Keep revisions/review history, but remove the publication and hide the article from the workspace.
+export async function deletePublishedArticle(
+  db: Db,
+  actor: Actor | null,
+  rawId: unknown,
+  rawVersion: unknown,
+) {
+  const author = requireReader(actor);
+  const access = authorize(author, "content.editOwn");
+  if (!access.allowed) throw new ArticleError(access.reason);
+  const { id, version } = articleReference(rawId, rawVersion);
+  const claimed = await db.content.updateMany({
+    where: {
+      id,
+      authorId: author.id,
+      kind: "POST",
+      currentVersion: version,
+      publishedVersion: version,
+      revisions: { some: { version, state: "PUBLISHED" } },
+    },
+    data: { publishedVersion: null, updatedAt: new Date() },
+  });
+  if (claimed.count !== 1) throw new ArticleError("文章已删除、版本已变化或无权操作，请刷新列表。");
+  const revision = await db.contentRevision.update({
+    where: { contentId_version: { contentId: id, version } },
+    data: { state: "WITHDRAWN" },
+  });
+  await db.moderationReview.create({
+    data: {
+      revisionId: revision.id,
+      targetVersion: version,
+      result: "WITHDRAWN",
+      reason: "作者删除已发布文章",
+      reviewerId: author.id,
+    },
+  });
+  await db.auditLog.create({
+    data: {
+      actorId: author.id,
+      action: "article.delete",
+      targetId: id,
+      before: { version, state: "PUBLISHED" },
+      after: { version, state: "WITHDRAWN" },
+    },
+  });
+  const content = await db.content.findUniqueOrThrow({ where: { id }, select: { slug: true } });
+  return { slug: content.slug };
 }

@@ -6,6 +6,7 @@ import { getDb } from "../db";
 import { saveDraft, deleteDraft } from "./drafts";
 import {
   submitArticle,
+  deletePublishedArticle,
   reviewArticle,
   copyRejectedArticle,
   readPublishedArticle,
@@ -152,6 +153,100 @@ test("article submission and review isolate private content and publish only the
           await assert.rejects(submitArticle(tx, owner, empty.id, empty.version));
           assert.equal(await tx.moderationReview.count({ where: { reviewerId: owner.id } }), 4);
           assert.ok((await tx.auditLog.count({ where: { actorId: owner.id } })) >= 4);
+          throw rollback;
+        },
+        { timeout: 30000 },
+      ),
+      (error) => error === rollback,
+    );
+  } finally {
+    await db.$disconnect();
+  }
+});
+
+test("article filters paginate correctly and authors can remove only their own published articles", async () => {
+  const db = getDb();
+  const rollback = new Error("ROLLBACK_DELETE_TESTS");
+  try {
+    await assert.rejects(
+      db.$transaction(
+        async (tx) => {
+          const user = await tx.user.create({
+            data: { githubId: `delete-test-${randomUUID()}`, name: "删除测试" },
+          });
+          const another = await tx.user.create({
+            data: { githubId: `delete-test-${randomUUID()}`, name: "其他用户" },
+          });
+          const actor: Actor = { id: user.id, role: "OWNER", banned: false, overrides: {} };
+          const other: Actor = { ...actor, id: another.id };
+          const draft = await saveDraft(tx, actor, {
+            version: 0,
+            title: "将删除的公开文章",
+            markdown: "内容",
+          });
+          const published = await submitArticle(tx, actor, draft.id, draft.version);
+          for (let i = 0; i < 23; i++)
+            await saveDraft(tx, actor, { version: 0, title: `草稿 ${i}`, markdown: "" });
+          assert.equal((await listMyArticles(tx, actor, 1, "published")).length, 1);
+          assert.equal((await listMyArticles(tx, actor, 1, "draft")).length, 21);
+          assert.equal((await listMyArticles(tx, actor, 2, "draft")).length, 3);
+          assert.equal((await listMyArticles(tx, actor, 1, "pending")).length, 0);
+          assert.equal((await listMyArticles(tx, other, 1, "published")).length, 0);
+          await assert.rejects(deletePublishedArticle(tx, null, draft.id, draft.version));
+          await assert.rejects(deletePublishedArticle(tx, other, draft.id, draft.version));
+          await assert.rejects(
+            deletePublishedArticle(tx, { ...actor, banned: true }, draft.id, draft.version),
+          );
+          await assert.rejects(
+            deletePublishedArticle(
+              tx,
+              { ...actor, overrides: { "content.editOwn": "DENY" } },
+              draft.id,
+              draft.version,
+            ),
+          );
+          await assert.rejects(deletePublishedArticle(tx, actor, draft.id, draft.version + 1));
+          assert.ok(await readPublishedArticle(tx, published.slug));
+          await deletePublishedArticle(tx, actor, draft.id, draft.version);
+          assert.equal(await readPublishedArticle(tx, published.slug), null);
+          assert.ok(
+            !(await listPublishedArticles(tx)).some((item) => item.slug === published.slug),
+          );
+          assert.equal(await readMyArticle(tx, actor, draft.id), null);
+          assert.equal((await listMyArticles(tx, actor, 1, "published")).length, 0);
+          assert.equal((await listMyArticles(tx, actor, 2)).length, 3);
+          await assert.rejects(deletePublishedArticle(tx, actor, draft.id, draft.version));
+          await assert.rejects(submitArticle(tx, actor, draft.id, draft.version));
+          assert.equal(
+            (await tx.content.findUniqueOrThrow({ where: { id: draft.id } })).publishedVersion,
+            null,
+          );
+          assert.equal(
+            await tx.moderationReview.count({ where: { revision: { contentId: draft.id } } }),
+            2,
+          );
+          assert.equal(
+            await tx.auditLog.count({ where: { targetId: draft.id, action: "article.delete" } }),
+            1,
+          );
+          const fresh = await saveDraft(tx, actor, {
+            version: 0,
+            title: "未发布",
+            markdown: "内容",
+          });
+          await assert.rejects(deletePublishedArticle(tx, actor, fresh.id, fresh.version));
+          const member: Actor = { ...other, role: "MEMBER" };
+          const pending = await saveDraft(tx, member, {
+            version: 0,
+            title: "待审核",
+            markdown: "内容",
+          });
+          await submitArticle(tx, member, pending.id, pending.version);
+          assert.equal((await listMyArticles(tx, member, 1, "draft")).length, 0);
+          assert.equal((await listMyArticles(tx, member, 1, "pending")).length, 1);
+          await reviewArticle(tx, actor, pending.id, pending.version, "reject", "需要补充");
+          assert.equal((await listMyArticles(tx, member, 1, "pending")).length, 0);
+          assert.equal((await listMyArticles(tx, member, 1, "rejected")).length, 1);
           throw rollback;
         },
         { timeout: 30000 },

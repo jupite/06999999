@@ -1005,3 +1005,11 @@ p {
 .draft-list + nav {
   margin-top: 24px;
 }
+
+.article-navigation,
+.article-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
