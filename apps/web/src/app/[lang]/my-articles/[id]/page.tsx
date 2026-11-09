@@ -7,6 +7,7 @@ import { readMyArticle } from "@/server/services/articles";
 import { articleStateLabels } from "@/server/domain/articles";
 import { authorize } from "@/server/domain/permissions";
 import { ArticleBody } from "@/components/article-body";
+import { ArticleTopics } from "@/components/article-topics";
 import { ArticleAccessNotice, ArticleNavigation } from "@/components/article-shared";
 import { CopyRejectedButton } from "@/components/article-controls";
 export const dynamic = "force-dynamic";
@@ -81,6 +82,7 @@ export default async function MyArticlePage({ params }: { params: Promise<{ id: 
             {t("viewPublished")}
           </LocaleLink>
         )}
+        <ArticleTopics category={revision.category} tags={revision.tags} />
         <ArticleBody markdown={revision.markdown} />
       </section>
     </>

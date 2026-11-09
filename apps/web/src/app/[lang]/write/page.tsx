@@ -8,6 +8,7 @@ import { getDb } from "@/server/db";
 import { authorize } from "@/server/domain/permissions";
 import { readDraft } from "@/server/services/drafts";
 import { readMyArticle } from "@/server/services/articles";
+import { listArticleCategories } from "@/server/services/article-taxonomy";
 export async function generateMetadata() {
   const { t } = await getI18n();
   return { title: t("articleEditor") };
@@ -34,7 +35,9 @@ export default async function WritePage({
     );
   if (id !== undefined && (typeof id !== "string" || !id || id.length > 100)) notFound();
   const canSubmit = authorize(actor, "post.submit").allowed;
-  let draft = id ? await readDraft(getDb(), actor, id) : { version: 0, title: "", markdown: "" };
+  let draft = id
+    ? await readDraft(getDb(), actor, id)
+    : { version: 0, title: "", markdown: "", categoryId: null, tagText: "" };
   let publishedEdit = false;
   if (!draft) {
     const submitted = id ? await readMyArticle(getDb(), actor, id) : null;
@@ -49,6 +52,8 @@ export default async function WritePage({
         version: submitted.currentVersion,
         title: revision.title,
         markdown: revision.markdown,
+        categoryId: revision.categoryId,
+        tagText: revision.tags.map((tag) => tag.name).join(", "),
       };
       publishedEdit = true;
     } else {
@@ -63,6 +68,7 @@ export default async function WritePage({
       );
     }
   }
+  const categories = await listArticleCategories(getDb());
   return (
     <>
       <div className="page-heading">
@@ -77,6 +83,7 @@ export default async function WritePage({
       <MarkdownEditor
         key={publishedEdit ? `${id}-edit` : (id ?? "new")}
         initialDraft={draft}
+        categories={categories}
         owner={actor.role === "OWNER"}
         canSubmit={canSubmit}
         canUpload={authorize(actor, "image.upload").allowed}

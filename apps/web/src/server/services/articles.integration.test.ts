@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { getDb } from "../db";
 import { saveDraft, deleteDraft } from "./drafts";
+import { createArticleCategory } from "./article-taxonomy";
+import { listPublishedTerms } from "./public-articles";
 import {
   submitArticle,
   submitArticleEdit,
@@ -18,6 +20,102 @@ import {
   readMyArticle,
 } from "./articles";
 import type { Actor } from "../domain/permissions";
+
+test("public taxonomy follows only the approved article version", async () => {
+  const db = getDb();
+  const rollback = new Error("ROLLBACK_TAXONOMY_TEST");
+  try {
+    await assert.rejects(
+      db.$transaction(
+        async (tx) => {
+          const suffix = randomUUID().slice(0, 8);
+          const user = await tx.user.create({
+            data: { githubId: `category-author-${suffix}`, name: "Author" },
+          });
+          const admin = await tx.user.create({
+            data: { githubId: `category-owner-${suffix}`, name: "Owner" },
+          });
+          const author: Actor = { id: user.id, role: "MEMBER", banned: false, overrides: {} };
+          const owner: Actor = { id: admin.id, role: "OWNER", banned: false, overrides: {} };
+          await assert.rejects(createArticleCategory(tx, author, "Forbidden"), {
+            message: "ownerOnly",
+          });
+          const first = await createArticleCategory(tx, owner, `分类 ${suffix}`);
+          const second = await createArticleCategory(tx, owner, `新分类 ${suffix}`);
+          await assert.rejects(createArticleCategory(tx, owner, ` ${first.name} `), {
+            message: "categoryNameTaken",
+          });
+
+          const originalTag = `标签 ${suffix}`;
+          const replacementTag = `新标签 ${suffix}`;
+          const draft = await saveDraft(tx, author, {
+            version: 0,
+            title: "Article taxonomy",
+            markdown: "Draft",
+            categoryId: first.id,
+            tagText: `${originalTag}，${originalTag}`,
+          });
+          const updated = await saveDraft(tx, author, {
+            id: draft.id,
+            version: draft.version,
+            title: draft.title,
+            markdown: "Ready",
+          });
+          assert.equal(updated.categoryId, first.id);
+          assert.equal(updated.tagText, originalTag);
+          const oldTag = await tx.tag.findUniqueOrThrow({ where: { name: originalTag } });
+          assert.ok(!(await listPublishedTerms(tx)).tags.some((term) => term.id === oldTag.id));
+          assert.ok(
+            !(await listPublishedTerms(tx)).categories.some((term) => term.id === first.id),
+          );
+          const submitted = await submitArticle(tx, author, draft.id, updated.version);
+          assert.equal((await listPublishedArticles(tx, 1, { tagId: oldTag.id })).length, 0);
+          await reviewArticle(tx, owner, draft.id, updated.version, "approve", "");
+          assert.equal((await readPublishedArticle(tx, submitted.slug))?.category?.id, first.id);
+          assert.equal(
+            (await listPublishedArticles(tx, 1, { categoryId: first.id, tagId: oldTag.id }))[0]
+              ?.slug,
+            submitted.slug,
+          );
+
+          await submitArticleEdit(tx, author, {
+            ...updated,
+            categoryId: second.id,
+            tagText: replacementTag,
+          });
+          const newTag = await tx.tag.findUniqueOrThrow({ where: { name: replacementTag } });
+          assert.deepEqual(
+            (await readPendingArticle(tx, owner, draft.id))?.revisions[0].tags.map((tag) => tag.id),
+            [newTag.id],
+          );
+          assert.ok(!(await listPublishedTerms(tx)).tags.some((term) => term.id === newTag.id));
+          assert.equal((await listPublishedArticles(tx, 1, { categoryId: second.id })).length, 0);
+          assert.equal((await readPublishedArticle(tx, submitted.slug))?.category?.id, first.id);
+          await reviewArticle(tx, owner, draft.id, updated.version + 1, "approve", "");
+          assert.equal((await listPublishedArticles(tx, 1, { tagId: oldTag.id })).length, 0);
+          assert.ok(
+            !(await listPublishedTerms(tx)).categories.some((term) => term.id === first.id),
+          );
+          assert.equal(
+            (await listPublishedArticles(tx, 1, { categoryId: first.id, tagId: newTag.id })).length,
+            0,
+          );
+          assert.equal(
+            (await listPublishedArticles(tx, 1, { categoryId: second.id, tagId: newTag.id }))[0]
+              ?.slug,
+            submitted.slug,
+          );
+          assert.equal((await readPublishedArticle(tx, submitted.slug))?.tags[0].id, newTag.id);
+          throw rollback;
+        },
+        { timeout: 30_000 },
+      ),
+      (error) => error === rollback,
+    );
+  } finally {
+    await db.$disconnect();
+  }
+});
 
 test("article submission and review isolate private content and publish only the approved version", async () => {
   const db = getDb();

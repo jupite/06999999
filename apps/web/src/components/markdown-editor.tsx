@@ -5,6 +5,7 @@ import { localePath } from "@/i18n/routing";
 import type { MessageKey, SystemKey } from "@/i18n/messages";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { imageIdFromUrl, imageUrl } from "@/media/urls";
+import { maxTagTextLength } from "@/server/domain/article-taxonomy";
 import { LocaleLink } from "@/i18n/link";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
@@ -14,17 +15,26 @@ import { submitArticleEditAction } from "@/app/[lang]/articles/actions";
 import { SubmitArticleButton } from "./article-controls";
 import { ArticleImage } from "./article-image";
 
-type Draft = { id?: string; version: number; title: string; markdown: string };
+type Draft = {
+  id?: string;
+  version: number;
+  title: string;
+  markdown: string;
+  categoryId: string | null;
+  tagText: string;
+};
 const maxMarkdownLength = 100_000;
 
 export function MarkdownEditor({
   initialDraft,
+  categories,
   owner,
   canSubmit,
   canUpload,
   publishedEdit = false,
 }: {
   initialDraft: Draft;
+  categories: { id: string; name: string }[];
   owner: boolean;
   canSubmit: boolean;
   canUpload: boolean;
@@ -163,6 +173,33 @@ export function MarkdownEditor({
             onChange={(e) => edit({ title: e.target.value })}
           />
         </label>
+        <div className="article-taxonomy-fields">
+          <label className="draft-title">
+            {t("articleCategory")}
+            <select
+              value={draft.categoryId ?? ""}
+              disabled={busy}
+              onChange={(event) => edit({ categoryId: event.target.value || null })}
+            >
+              <option value="">{t("noArticleCategory")}</option>
+              {categories.map(({ id, name }) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="draft-title">
+            {t("articleTags")}
+            <input
+              value={draft.tagText}
+              maxLength={maxTagTextLength}
+              disabled={busy}
+              placeholder={t("articleTagsPlaceholder")}
+              onChange={(event) => edit({ tagText: event.target.value })}
+            />
+          </label>
+        </div>
         <div className="editor-grid">
           <label className="panel editor-input">
             <span className="eyebrow">MARKDOWN</span>

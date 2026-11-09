@@ -25,3 +25,20 @@ test("draft creation and editing honor login, ban and explicit permissions", () 
   );
   assert.equal(requireDraftActor(member).id, "test");
 });
+
+test("draft taxonomy validates category identifiers and normalizes unique tags", () => {
+  const draft = { version: 0, title: "Notes", markdown: "" };
+  assert.equal(
+    parseDraft({ ...draft, categoryId: null, tagText: " Café，Cafe\u0301, 笔记 " }).tagText,
+    "Café, 笔记",
+  );
+  assert.throws(() => parseDraft({ ...draft, categoryId: ["x"] }), {
+    message: "invalidArticleCategory",
+  });
+  assert.throws(() => parseDraft({ ...draft, tagText: "a,b,c,d,e,f" }), {
+    message: "invalidArticleTags",
+  });
+  assert.throws(() => parseDraft({ ...draft, tagText: "x".repeat(33) }), {
+    message: "invalidArticleTags",
+  });
+});

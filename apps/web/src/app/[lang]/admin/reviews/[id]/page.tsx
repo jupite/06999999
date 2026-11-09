@@ -7,6 +7,7 @@ import { getDb } from "@/server/db";
 import { readPendingArticle } from "@/server/services/articles";
 import { ArticleAccessNotice } from "@/components/article-shared";
 import { ArticleBody } from "@/components/article-body";
+import { ArticleTopics } from "@/components/article-topics";
 import { ReviewArticleForm } from "@/components/article-controls";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
@@ -38,6 +39,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
         <p>{t("reviewVersion", { author: article.author.name, version: revision.version })}</p>
         {article.author.banned && <p className="notice">{t("authorBanned")}</p>}
         {article.publishedVersion !== null && <p>{t("reviewPublishedEdit")}</p>}
+        <ArticleTopics category={revision.category} tags={revision.tags} />
         <ArticleBody markdown={revision.markdown} />
       </article>
       <ReviewArticleForm id={article.id} version={revision.version} />

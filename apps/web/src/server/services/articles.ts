@@ -10,6 +10,7 @@ import {
 } from "../domain/articles";
 import { saveDraft } from "./drafts";
 import { articleMedia } from "./article-media";
+import { articleTaxonomy, resolveArticleTaxonomy } from "./article-taxonomy";
 
 type Db = Prisma.TransactionClient;
 function requireActor(actor: Actor | null, manage = false): Actor {
@@ -106,6 +107,7 @@ export async function submitArticleEdit(db: Db, actor: Actor | null, value: unkn
     },
   });
   if (claimed.count !== 1) throw new ArticleError("articleEditConflict");
+  const { relations } = await resolveArticleTaxonomy(db, input, { id, version });
   const revision = await db.contentRevision.create({
     data: {
       contentId: id,
@@ -113,6 +115,7 @@ export async function submitArticleEdit(db: Db, actor: Actor | null, value: unkn
       title: input.title,
       markdown: input.markdown,
       media,
+      ...relations,
       state,
     },
     include: { content: { select: { slug: true } } },
@@ -230,7 +233,7 @@ export async function copyRejectedArticle(
       publishedVersion: null,
       revisions: { none: { state: "WITHDRAWN" } },
     },
-    include: { revisions: { where: { version, state: "REJECTED" } } },
+    include: { revisions: { where: { version, state: "REJECTED" }, include: articleTaxonomy } },
   });
   const revision = source?.revisions[0];
   if (!revision) throw new ArticleError("rejectedArticleMissing");
@@ -238,6 +241,8 @@ export async function copyRejectedArticle(
     version: 0,
     title: revision.title,
     markdown: revision.markdown,
+    categoryId: revision.categoryId,
+    tagText: revision.tags.map((tag) => tag.name).join(", "),
   });
   await db.auditLog.create({
     data: {
@@ -253,7 +258,7 @@ export async function copyRejectedArticle(
 const latestRevision = {
   orderBy: { version: "desc" as const },
   take: 1,
-  include: { reviews: { orderBy: { createdAt: "desc" as const }, take: 1 } },
+  include: { ...articleTaxonomy, reviews: { orderBy: { createdAt: "desc" as const }, take: 1 } },
 };
 export async function listMyArticles(
   db: Db,
@@ -318,61 +323,7 @@ export async function readPendingArticle(db: Db, actor: Actor | null, id: string
   return content?.revisions[0]?.state === "PENDING_HUMAN" ? content : null;
 }
 
-// Only read approved revisions and then select the exact published-version pointer.
-const publicSelect = {
-  id: true,
-  slug: true,
-  publishedVersion: true,
-  updatedAt: true,
-  author: { select: { name: true } },
-  revisions: {
-    where: { state: "PUBLISHED" as const },
-    select: {
-      version: true,
-      title: true,
-      markdown: true,
-      reviews: {
-        where: { result: "PUBLISHED" as const },
-        orderBy: { createdAt: "desc" as const },
-        take: 1,
-        select: { createdAt: true },
-      },
-    },
-  },
-} satisfies Prisma.ContentSelect;
-type PublicContent = Prisma.ContentGetPayload<{ select: typeof publicSelect }>;
-function published(content: PublicContent) {
-  const revision = content.revisions.find((r) => r.version === content.publishedVersion);
-  if (!revision) return null;
-  return {
-    slug: content.slug,
-    title: revision.title,
-    markdown: revision.markdown,
-    authorName: content.author.name,
-    publishedAt: revision.reviews[0]?.createdAt ?? content.updatedAt,
-  };
-}
-export async function listPublishedArticles(db: Db, page = 1) {
-  const contents = await db.content.findMany({
-    where: {
-      kind: "POST",
-      publishedVersion: { not: null },
-      revisions: { some: { state: "PUBLISHED" } },
-    },
-    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-    skip: (page - 1) * 20,
-    take: 21,
-    select: publicSelect,
-  });
-  return contents.map(published).filter((item): item is NonNullable<typeof item> => item !== null);
-}
-export async function readPublishedArticle(db: Db, slug: string) {
-  const content = await db.content.findFirst({
-    where: { slug, kind: "POST", publishedVersion: { not: null } },
-    select: publicSelect,
-  });
-  return content ? published(content) : null;
-}
+export { listPublishedArticles, readPublishedArticle } from "./public-articles";
 
 // Keep revisions/review history, but remove the publication and hide the article from the workspace.
 export async function deletePublishedArticle(
