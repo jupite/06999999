@@ -1,13 +1,9 @@
 import { notFound } from "next/navigation";
 import { LocaleLink } from "@/i18n/link";
-import { Camera, Code2, Heart, Music2, Moon, Plus } from "lucide-react";
+import { Camera, Heart, Music2, Moon, Plus } from "lucide-react";
 import { MusicCard } from "@/components/music-provider";
 import { getI18n } from "@/i18n/server";
 const sections = {
-  projects: {
-    en: "SMALL IDEAS, REAL THINGS",
-    icon: Code2,
-  },
   photos: {
     en: "COLLECTING LITTLE MOMENTS",
     icon: Camera,

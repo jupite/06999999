@@ -23,7 +23,7 @@ export const config = {
     "/write",
     "/login",
     "/admin/:path*",
-    "/projects",
+    "/projects/:path*",
     "/photos",
     "/music",
     "/friends",

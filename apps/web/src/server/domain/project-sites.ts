@@ -4,20 +4,58 @@ export type SiteRule = {
   effect: "ALLOW" | "DENY";
   enabled: boolean;
 };
-export function projectUrlAllowed(value: string, rules: SiteRule[]): boolean {
+export type ProjectUrlDecision = "allowed" | "denied" | "unmatched" | "invalid";
+export const maxProjectUrlLength = 2048;
+
+export function normalizeSiteHostname(value: unknown) {
+  if (typeof value !== "string") return null;
+  const input = value.trim();
+  if (!input || input.length > 254 || /[\s/\\?#@:*%]/u.test(input)) return null;
+  try {
+    const hostname = new URL(`https://${input}`).hostname.toLowerCase().replace(/\.$/, "");
+    const validLabel = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+    return hostname.length <= 253 && hostname.split(".").every((label) => validLabel.test(label))
+      ? hostname
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function parseProjectUrl(value: unknown) {
+  if (typeof value !== "string" || !value.trim() || value.length > maxProjectUrlLength) return null;
   try {
     const url = new URL(value);
-    if (!["https:", "http:"].includes(url.protocol) || url.username || url.password || url.port)
-      return false;
-    const host = url.hostname.toLowerCase().replace(/\.$/, "");
-    const matches = rules.filter((rule) => {
-      if (!rule.enabled) return false;
-      const domain = rule.hostname.toLowerCase().replace(/\.$/, "");
-      if (!domain || domain.includes("/") || domain.includes(":")) return false;
-      return host === domain || (rule.includeSubdomains && host.endsWith(`.${domain}`));
-    });
-    return matches.some((r) => r.effect === "ALLOW") && !matches.some((r) => r.effect === "DENY");
+    if (
+      !["https:", "http:"].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.href.length > maxProjectUrlLength
+    )
+      return null;
+    return url;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function projectUrlDecision(value: unknown, rules: SiteRule[]): ProjectUrlDecision {
+  const url = parseProjectUrl(value);
+  if (!url) return "invalid";
+  const host = url.hostname.toLowerCase().replace(/\.$/, "");
+  let allowed = false;
+  for (const rule of rules) {
+    if (!rule.enabled) continue;
+    const domain = normalizeSiteHostname(rule.hostname);
+    if (!domain || (host !== domain && !(rule.includeSubdomains && host.endsWith(`.${domain}`))))
+      continue;
+    if (rule.effect === "DENY") return "denied";
+    if (rule.effect === "ALLOW") allowed = true;
+  }
+  return allowed ? "allowed" : "unmatched";
+}
+
+export function projectUrlAllowed(value: string, rules: SiteRule[]): boolean {
+  return projectUrlDecision(value, rules) === "allowed";
 }

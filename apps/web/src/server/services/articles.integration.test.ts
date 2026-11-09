@@ -6,6 +6,7 @@ import { getDb } from "../db";
 import { saveDraft, deleteDraft } from "./drafts";
 import { createArticleCategory } from "./article-taxonomy";
 import { listPublishedTerms } from "./public-articles";
+import { listUserAccounts, readUserAccount, updateUserAccess } from "./user-access";
 import {
   submitArticle,
   submitArticleEdit,
@@ -19,7 +20,128 @@ import {
   listMyArticles,
   readMyArticle,
 } from "./articles";
-import type { Actor } from "../domain/permissions";
+import { accountActor, authorize, hasCurrentSession, type Actor } from "../domain/permissions";
+
+test("owner access changes are scoped, audited, and enforced during article review", async () => {
+  const db = getDb();
+  const rollback = new Error("ROLLBACK_USER_ACCESS_TEST");
+  try {
+    await assert.rejects(
+      db.$transaction(
+        async (tx) => {
+          const key = randomUUID();
+          const owner = await tx.user.create({
+            data: { githubId: `access-owner-${key}`, name: "Owner" },
+          });
+          const member = await tx.user.create({
+            data: { githubId: `access-member-${key}`, name: `Member ${key}` },
+          });
+          const manager = accountActor({ ...owner, permissions: [] }, owner.githubId);
+          const author = accountActor({ ...member, permissions: [] }, owner.githubId);
+          const form = (scope: string, expected: string, value: string, capability?: string) => {
+            const fields = new FormData();
+            fields.set("scope", scope);
+            fields.set("expected", expected);
+            fields.set("value", value);
+            if (capability) fields.set("capability", capability);
+            return fields;
+          };
+          const update = (id: string, fields: FormData, actor = manager) =>
+            updateUserAccess(tx, actor, id, owner.githubId, fields);
+
+          await assert.rejects(update(member.id, form("account", "active", "banned"), author), {
+            message: "ownerOnly",
+          });
+          await assert.rejects(update(owner.id, form("account", "active", "banned")), {
+            message: "ownerAccountProtected",
+          });
+          await assert.rejects(
+            update(member.id, form("permission", "inherit", "ALLOW", "site.manage")),
+            { message: "invalidUserAccess" },
+          );
+          const draft = await saveDraft(tx, author, {
+            version: 0,
+            title: "Pending",
+            markdown: "Content",
+          });
+          const submitted = await submitArticle(tx, author, draft.id, draft.version);
+
+          await update(member.id, form("permission", "inherit", "DENY", "post.submit"));
+          await assert.rejects(
+            update(member.id, form("permission", "inherit", "ALLOW", "post.submit")),
+            { message: "userAccessConflict" },
+          );
+          await assert.rejects(reviewArticle(tx, manager, draft.id, draft.version, "approve", ""), {
+            message: "authorCannotPublish",
+          });
+          assert.equal(await readPublishedArticle(tx, submitted.slug), null);
+          const filtered = await listUserAccounts(tx, manager, {
+            page: 1,
+            search: key,
+            status: "custom",
+            capability: "post.submit",
+            effect: "DENY",
+          });
+          assert.deepEqual(
+            filtered.map(({ id }) => id),
+            [member.id],
+          );
+
+          await update(member.id, form("permission", "DENY", "inherit", "post.submit"));
+          await update(member.id, form("permission", "inherit", "ALLOW", "image.upload"));
+          await update(member.id, form("account", "active", "banned"));
+          const banned = (await readUserAccount(tx, manager, member.id))?.user;
+          assert.ok(banned);
+          assert.equal(banned.sessionVersion, 1);
+          assert.equal(hasCurrentSession(banned, 1), false);
+          assert.equal(
+            authorize(accountActor(banned, owner.githubId), "image.upload").allowed,
+            false,
+          );
+          await assert.rejects(reviewArticle(tx, manager, draft.id, draft.version, "approve", ""), {
+            message: "authorCannotPublish",
+          });
+          await update(member.id, form("account", "banned", "active"));
+
+          const details = await readUserAccount(tx, manager, member.id);
+          assert.ok(details);
+          assert.equal(hasCurrentSession(details.user, 0), false);
+          assert.equal(hasCurrentSession(details.user, 1), false);
+          assert.equal(hasCurrentSession(details.user, 2), true);
+          assert.equal(
+            authorize(accountActor(details.user, owner.githubId), "image.upload").allowed,
+            true,
+          );
+          assert.equal(details.audit.length, 5);
+          assert.ok(details.audit.every(({ actorId }) => actorId === owner.id));
+          assert.ok(
+            details.audit.some(
+              ({ action, before, after }) =>
+                action === "user.updatePermission" &&
+                JSON.stringify(before).includes("DENY") &&
+                JSON.stringify(after).includes("inherit"),
+            ),
+          );
+          await reviewArticle(tx, manager, draft.id, draft.version, "approve", "");
+          assert.equal((await readPublishedArticle(tx, submitted.slug))?.title, "Pending");
+
+          const legacy = await tx.user.create({
+            data: { githubId: `legacy-banned-${key}`, name: "Legacy ban", banned: true },
+          });
+          await update(legacy.id, form("account", "banned", "active"));
+          const unbanned = await tx.user.findUniqueOrThrow({ where: { id: legacy.id } });
+          assert.equal(hasCurrentSession(unbanned, undefined), false);
+          assert.equal(hasCurrentSession(unbanned, 1), true);
+          throw rollback;
+        },
+        { timeout: 30_000 },
+      ),
+      (error) => error === rollback,
+    );
+  } finally {
+    await db.$disconnect();
+  }
+});
 
 test("public taxonomy follows only the approved article version", async () => {
   const db = getDb();

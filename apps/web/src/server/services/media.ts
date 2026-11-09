@@ -7,7 +7,7 @@ import type { PrismaClient } from "@/generated/prisma/client";
 import { imageIdFromUrl, imageUrl } from "@/media/urls";
 import { bytesPerMib, maxUploadMib, MediaError } from "../domain/media";
 import { authorize, withinQuota, type Actor } from "../domain/permissions";
-import { lockMediaUser } from "./media-settings";
+import { lockUserAccount } from "./user-access";
 
 const maximumBodyBytes = BigInt(maxUploadMib) * bytesPerMib;
 const diskReserveBytes = 64n * bytesPerMib;
@@ -105,7 +105,7 @@ export async function storeImage(
       if (BigInt(source.byteLength) > limit || bytes > limit)
         throw new MediaError("imageTooLarge", 413);
 
-      await lockMediaUser(tx, uploader.id);
+      await lockUserAccount(tx, uploader.id);
       const user = await tx.user.findUnique({
         where: { id: uploader.id },
         select: {

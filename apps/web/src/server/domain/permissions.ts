@@ -13,12 +13,53 @@ export const capabilities = [
   "site.manage",
 ] as const;
 export type Capability = (typeof capabilities)[number];
+export const editableCapabilities = capabilities.filter(
+  (capability) => capability !== "site.manage",
+);
+export type EditableCapability = (typeof editableCapabilities)[number];
+
+export function isEditableCapability(value: unknown): value is EditableCapability {
+  return editableCapabilities.some((capability) => capability === value);
+}
+
+export const permissionModes = ["inherit", "ALLOW", "DENY"] as const;
+export type PermissionMode = (typeof permissionModes)[number];
+
+export function isPermissionMode(value: unknown): value is PermissionMode {
+  return permissionModes.some((mode) => mode === value);
+}
 export type Actor = {
   id: string;
   role: "OWNER" | "MEMBER";
   banned: boolean;
   overrides: Partial<Record<Capability, "ALLOW" | "DENY">>;
 };
+
+export function accountActor(
+  user: {
+    id: string;
+    githubId: string;
+    banned: boolean;
+    permissions: { capability: string; effect: "ALLOW" | "DENY" }[];
+  },
+  ownerGithubId: string | undefined,
+): Actor {
+  return {
+    id: user.id,
+    role: user.githubId === ownerGithubId ? "OWNER" : "MEMBER",
+    banned: user.banned,
+    overrides: Object.fromEntries(
+      user.permissions.map(({ capability, effect }) => [capability, effect]),
+    ),
+  };
+}
+
+export function hasCurrentSession(
+  user: { banned: boolean; sessionVersion: number } | null,
+  version: unknown,
+) {
+  return !!user && !user.banned && user.sessionVersion === (version === undefined ? 0 : version);
+}
 export function authorize(
   actor: Actor | null,
   capability: Capability,
@@ -26,6 +67,7 @@ export function authorize(
 ): { allowed: boolean; reason: SystemKey } {
   if (!actor) return { allowed: false, reason: "loginRequired" };
   if (actor.banned) return { allowed: false, reason: "accountBanned" };
+  if (!capabilities.includes(capability)) return { allowed: false, reason: "permissionDenied" };
   if (actor.overrides[capability] === "DENY") return { allowed: false, reason: "permissionDenied" };
   if (capability === "site.manage" && actor.role !== "OWNER")
     return { allowed: false, reason: "ownerOnly" };

@@ -2,13 +2,10 @@ import "server-only";
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { maxUploadMib, MediaError, quotaBytes } from "../domain/media";
 import { authorize, type Actor } from "../domain/permissions";
+import { lockUserAccount } from "./user-access";
 
 export function isGithubId(value: unknown): value is string {
   return typeof value === "string" && /^\d{1,20}$/.test(value);
-}
-
-export async function lockMediaUser(tx: Prisma.TransactionClient, userId: string) {
-  await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
 }
 
 export async function saveMediaLimits(db: PrismaClient, actor: Actor, form: FormData) {
@@ -61,7 +58,7 @@ export async function saveUserMediaAccess(
   await db.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { githubId }, select: { id: true } });
     if (!user) throw new MediaError("mediaUserMissing");
-    await lockMediaUser(tx, user.id);
+    await lockUserAccount(tx, user.id);
     const where = { userId_capability: { userId: user.id, capability: "image.upload" } };
     const previous = await tx.permissionOverride.findUnique({ where });
     const quota = await tx.storageQuota.findUnique({ where: { userId: user.id } });

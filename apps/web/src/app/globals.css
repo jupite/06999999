@@ -1073,3 +1073,36 @@ p {
 .article-filter-form {
   margin-bottom: 16px;
 }
+.project-catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.project-entry:hover {
+  border-color: var(--accent);
+}
+.project-cover img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+.project-summary {
+  white-space: pre-wrap;
+}
+.access-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+.access-setting {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.user-audit {
+  padding-left: 20px;
+}

@@ -2,9 +2,10 @@
 
 import { useI18n, type Notice } from "@/i18n/client";
 import { localePath } from "@/i18n/routing";
-import type { MessageKey, SystemKey } from "@/i18n/messages";
+import type { MessageKey } from "@/i18n/messages";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { imageIdFromUrl, imageUrl } from "@/media/urls";
+import { imageUrl } from "@/media/urls";
+import { uploadImage } from "@/media/upload";
 import { maxTagTextLength } from "@/server/domain/article-taxonomy";
 import { LocaleLink } from "@/i18n/link";
 import { useRouter } from "next/navigation";
@@ -76,13 +77,11 @@ export function MarkdownEditor({
     setError(null);
     setMessage("");
     try {
-      const response = await fetch("/api/media", { method: "POST", body: file });
-      const result: { url: string } | { error: SystemKey } = await response.json();
+      const result = await uploadImage(file);
       if ("error" in result) {
         setError({ system: result.error });
         return;
       }
-      if (!response.ok || !imageIdFromUrl(result.url)) throw new Error("Invalid upload response");
       edit({ markdown: `${prefix}${result.url})\n` });
       setMessage("imageInserted");
     } catch {

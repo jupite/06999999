@@ -19,7 +19,8 @@
     "format:check": "prettier --check \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
     "test:drafts": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/drafts.integration.test.ts",
     "test:articles": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/drafts.integration.test.ts src/server/services/articles.integration.test.ts",
-    "test:media": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/media.integration.test.ts"
+    "test:media": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/media.integration.test.ts",
+    "test:projects": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/project-sites.integration.test.ts"
   },
   "devDependencies": {
     "prettier": "3.9.9"

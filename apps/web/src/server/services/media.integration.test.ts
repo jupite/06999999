@@ -35,11 +35,17 @@ test("uploads enforce quotas and follow the current public article revision", as
   process.env.MEDIA_ROOT = root;
 
   try {
-    const migration = await readFile(
-      "prisma/migrations/20261001000000_initial/migration.sql",
-      "utf8",
+    const migrations = await readdir("prisma/migrations", { withFileTypes: true });
+    const sql = await Promise.all(
+      migrations
+        .filter((entry) => entry.isDirectory())
+        .map(({ name }) => name)
+        .sort()
+        .map((name) => readFile(join("prisma/migrations", name, "migration.sql"), "utf8")),
     );
-    await pool.query(`CREATE SCHEMA "${schema}"; SET search_path TO "${schema}"; ${migration}`);
+    await pool.query(
+      `CREATE SCHEMA "${schema}"; SET search_path TO "${schema}"; ${sql.join("\n")}`,
+    );
     const ownerUser = await db.user.create({ data: { githubId: "123", name: "Owner" } });
     const authorUser = await db.user.create({ data: { githubId: "456", name: "Author" } });
     const owner: Actor = { id: ownerUser.id, role: "OWNER", banned: false, overrides: {} };

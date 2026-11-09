@@ -108,3 +108,7 @@ VS Code 已配置 Next.js 服务端、Chrome 前端和一键全栈调试。打�
 文章插图通过编辑器上传。存储目录、上传权限和配额设置见 [文章图片上传](doc/article-images.md)。
 
 作者可以给文章选择分类并填写标签，读者可以按两者筛选公开文章。操作步骤见 [分类和标签](doc/article-publishing.md#分类和标签)。
+
+站主可在管理后台搜索用户、逐项设置权限或封禁账号。操作与会话生效规则见 [用户权限管理](doc/permission-system.md)。
+
+项目栏目支持投稿、人工审核和卡片展示。配置网址规则与提交步骤见 [项目卡片发布](doc/project-publishing.md)。

@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { authorize, type Actor } from "../domain/permissions";
+import { accountActor, authorize, type Actor } from "../domain/permissions";
 import { parseDraft } from "../domain/drafts";
 import {
   ArticleError,
@@ -11,6 +11,7 @@ import {
 import { saveDraft } from "./drafts";
 import { articleMedia } from "./article-media";
 import { articleTaxonomy, resolveArticleTaxonomy } from "./article-taxonomy";
+import { lockUserAccount } from "./user-access";
 
 type Db = Prisma.TransactionClient;
 function requireActor(actor: Actor | null, manage = false): Actor {
@@ -166,23 +167,19 @@ export async function reviewArticle(
   if (claimed.count !== 1) throw new ArticleError("articleReviewConflict");
   const content = await db.content.findUniqueOrThrow({
     where: { id },
-    include: { author: { include: { permissions: true } } },
+    select: { slug: true, authorId: true },
   });
   const pending = await db.contentRevision.findUniqueOrThrow({
     where: { contentId_version: { contentId: id, version } },
   });
   if (pending.state !== "PENDING_HUMAN") throw new ArticleError("articleAlreadyReviewed");
   if (input.decision === "approve") {
-    const author = content.author;
-    const access = authorize(
-      {
-        id: author.id,
-        role: "MEMBER",
-        banned: author.banned,
-        overrides: Object.fromEntries(author.permissions.map((p) => [p.capability, p.effect])),
-      },
-      "post.submit",
-    );
+    await lockUserAccount(db, content.authorId);
+    const author = await db.user.findUniqueOrThrow({
+      where: { id: content.authorId },
+      include: { permissions: true },
+    });
+    const access = authorize(accountActor(author, undefined), "post.submit");
     if (!access.allowed)
       throw new ArticleError({ key: "authorCannotPublish", reason: access.reason });
   }

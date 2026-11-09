@@ -2,7 +2,7 @@ import "server-only";
 import { getServerSession, type NextAuthOptions } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import { getDb } from "./db";
-import type { Actor, Capability } from "./domain/permissions";
+import { accountActor, hasCurrentSession, type Actor } from "./domain/permissions";
 export function authConfigured() {
   return Boolean(
     process.env.GITHUB_CLIENT_ID &&
@@ -38,12 +38,27 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, account }) {
-      if (account?.provider === "github") token.githubId = account.providerAccountId;
+      const githubId = account?.provider === "github" ? account.providerAccountId : token.githubId;
+      if (typeof githubId !== "string") return token;
+      const user = await getDb().user.findUnique({
+        where: { githubId },
+        select: { banned: true, sessionVersion: true },
+      });
+      if (account?.provider === "github") {
+        return user && !user.banned
+          ? { ...token, githubId, sessionVersion: user.sessionVersion }
+          : {};
+      }
+      if (!hasCurrentSession(user, token.sessionVersion)) return {};
       return token;
     },
     async session({ session, token }) {
-      session.githubId = typeof token.githubId === "string" ? token.githubId : undefined;
-      return session;
+      if (typeof token.githubId !== "string") return { expires: session.expires };
+      return {
+        ...session,
+        githubId: token.githubId,
+        sessionVersion: typeof token.sessionVersion === "number" ? token.sessionVersion : undefined,
+      };
     },
   },
 };
@@ -55,13 +70,6 @@ export async function currentActor(): Promise<Actor | null> {
     where: { githubId: session.githubId },
     include: { permissions: true },
   });
-  if (!user) return null;
-  return {
-    id: user.id,
-    role: process.env.OWNER_GITHUB_ID === user.githubId ? "OWNER" : "MEMBER",
-    banned: user.banned,
-    overrides: Object.fromEntries(user.permissions.map((p) => [p.capability, p.effect])) as Partial<
-      Record<Capability, "ALLOW" | "DENY">
-    >,
-  };
+  if (!user || !hasCurrentSession(user, session.sessionVersion)) return null;
+  return accountActor(user, process.env.OWNER_GITHUB_ID);
 }
