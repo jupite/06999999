@@ -1,16 +1,11 @@
 import { notFound } from "next/navigation";
 import { LocaleLink } from "@/i18n/link";
-import { Camera, Heart, Music2, Moon, Plus } from "lucide-react";
-import { MusicCard } from "@/components/music-provider";
+import { Camera, Heart, Moon, Plus } from "lucide-react";
 import { getI18n } from "@/i18n/server";
 const sections = {
   photos: {
     en: "COLLECTING LITTLE MOMENTS",
     icon: Camera,
-  },
-  music: {
-    en: "SOUNDTRACK OF THIS MOMENT",
-    icon: Music2,
   },
   friends: {
     en: "OTHER LITTLE UNIVERSES",
@@ -45,11 +40,6 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
         </h1>
         <p>{t(`${section}Description`)}</p>
       </div>
-      {section === "music" && (
-        <div className="music-page-card">
-          <MusicCard />
-        </div>
-      )}
       <section className="panel empty-state">
         <div className="empty-icon">
           <Icon size={32} />
