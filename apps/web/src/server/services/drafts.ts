@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import type { Actor } from "../domain/permissions";
 import { DraftError, parseDraft, requireDraftActor } from "../domain/drafts";
+import { articleMedia } from "./article-media";
 
 type Db = Prisma.TransactionClient;
 function scope(actor: Actor): Prisma.ContentWhereInput {
@@ -46,13 +47,14 @@ export async function readDraft(db: Db, actor: Actor, id: string) {
 export async function saveDraft(db: Db, actor: Actor | null, value: unknown) {
   const input = parseDraft(value);
   const author = requireDraftActor(actor, !!input.id);
+  const media = await articleMedia(db, author.id, input.markdown);
   if (!input.id) {
     const content = await db.content.create({
       data: {
         authorId: author.id,
         kind: "POST",
         slug: randomUUID(),
-        revisions: { create: { version: 1, title: input.title, markdown: input.markdown } },
+        revisions: { create: { version: 1, title: input.title, markdown: input.markdown, media } },
       },
     });
     return { ...input, id: content.id, version: 1 };
@@ -68,6 +70,7 @@ export async function saveDraft(db: Db, actor: Actor | null, value: unknown) {
       version: input.version + 1,
       title: input.title,
       markdown: input.markdown,
+      media,
     },
   });
   return { ...input, id: input.id, version: input.version + 1 };

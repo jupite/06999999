@@ -6,6 +6,7 @@ import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { ArticleError } from "@/server/domain/articles";
 import { DraftError } from "@/server/domain/drafts";
+import { MediaError } from "@/server/domain/media";
 import {
   submitArticle,
   submitArticleEdit,
@@ -27,9 +28,11 @@ function failure(error: unknown) {
   return {
     ok: false as const,
     error:
-      error instanceof ArticleError || error instanceof DraftError
-        ? error.notice
-        : ("articleActionFailed" as const),
+      error instanceof MediaError
+        ? error.key
+        : error instanceof ArticleError || error instanceof DraftError
+          ? error.notice
+          : ("articleActionFailed" as const),
   };
 }
 export async function submitArticleAction(id: unknown, version: unknown) {

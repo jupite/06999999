@@ -693,6 +693,11 @@ p {
 .prose h1 {
   font-size: 27px;
 }
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
 .prose h2 {
   font-size: 22px;
 }

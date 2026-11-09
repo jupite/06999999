@@ -23,6 +23,9 @@ export default async function AdminPage() {
       <LocaleLink className="button" href="/admin/reviews">
         {t("articleReview")}
       </LocaleLink>
+      <LocaleLink className="button secondary" href="/admin/media">
+        {t("mediaSettings")}
+      </LocaleLink>
       <p>{t("adminDescription")}</p>
     </section>
   );

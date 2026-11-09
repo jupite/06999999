@@ -1,6 +1,7 @@
 import { getI18n } from "@/i18n/server";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ArticleImage } from "./article-image";
 export async function ArticleBody({ markdown }: { markdown: string }) {
   const { t } = await getI18n();
   return (
@@ -9,7 +10,9 @@ export async function ArticleBody({ markdown }: { markdown: string }) {
         remarkPlugins={[remarkGfm]}
         skipHtml
         components={{
-          img: () => <span className="notice">{t("imagesUnavailable")}</span>,
+          img: ({ src, alt, title }) => (
+            <ArticleImage src={src} alt={alt} title={title} unavailable={t("imagesUnavailable")} />
+          ),
           a: ({ href, children }) => (
             <a href={href} rel="nofollow ugc noreferrer">
               {children}

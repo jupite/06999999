@@ -47,9 +47,18 @@ importers:
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
+      remark-parse:
+        specifier: 11.0.0
+        version: 11.0.0
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@24.19.0)
+      unified:
+        specifier: 11.0.5
+        version: 11.0.5
     devDependencies:
       '@types/node':
         specifier: ^24.0.0

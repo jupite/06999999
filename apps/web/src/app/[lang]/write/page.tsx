@@ -79,6 +79,7 @@ export default async function WritePage({
         initialDraft={draft}
         owner={actor.role === "OWNER"}
         canSubmit={canSubmit}
+        canUpload={authorize(actor, "image.upload").allowed}
         publishedEdit={publishedEdit}
       />
     </>

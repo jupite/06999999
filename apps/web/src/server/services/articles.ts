@@ -9,6 +9,7 @@ import {
   type ArticleFilter,
 } from "../domain/articles";
 import { saveDraft } from "./drafts";
+import { articleMedia } from "./article-media";
 
 type Db = Prisma.TransactionClient;
 function requireActor(actor: Actor | null, manage = false): Actor {
@@ -48,7 +49,11 @@ export async function submitArticle(
   if (!revision.title.trim() || !revision.markdown.trim())
     throw new ArticleError("articleContentRequired");
   const state = author.role === "OWNER" ? "PUBLISHED" : "PENDING_HUMAN";
-  await db.contentRevision.update({ where: { id: revision.id }, data: { state } });
+  const media = await articleMedia(db, author.id, revision.markdown);
+  await db.contentRevision.update({
+    where: { id: revision.id },
+    data: { state, media: { set: media?.connect ?? [] } },
+  });
   const content = await db.content.update({
     where: { id },
     data: { publishedVersion: state === "PUBLISHED" ? version : null },
@@ -85,6 +90,7 @@ export async function submitArticleEdit(db: Db, actor: Actor | null, value: unkn
 
   const state = author.role === "OWNER" ? "PUBLISHED" : "PENDING_HUMAN";
   const nextVersion = version + 1;
+  const media = await articleMedia(db, author.id, input.markdown);
   const claimed = await db.content.updateMany({
     where: {
       id,
@@ -106,6 +112,7 @@ export async function submitArticleEdit(db: Db, actor: Actor | null, value: unkn
       version: nextVersion,
       title: input.title,
       markdown: input.markdown,
+      media,
       state,
     },
     include: { content: { select: { slug: true } } },

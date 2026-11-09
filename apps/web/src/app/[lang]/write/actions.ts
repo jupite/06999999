@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { DraftError } from "@/server/domain/drafts";
+import { MediaError } from "@/server/domain/media";
 import { saveDraft, deleteDraft } from "@/server/services/drafts";
 
 export async function saveDraftAction(input: unknown) {
@@ -16,7 +17,12 @@ export async function saveDraftAction(input: unknown) {
   } catch (error) {
     return {
       ok: false as const,
-      error: error instanceof DraftError ? error.notice : ("draftSaveFailed" as const),
+      error:
+        error instanceof MediaError
+          ? error.key
+          : error instanceof DraftError
+            ? error.notice
+            : ("draftSaveFailed" as const),
     };
   }
 }
