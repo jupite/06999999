@@ -1,112 +1,107 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { MusicCard, useMusic } from "@/components/music-provider";
 import { useI18n } from "@/i18n/client";
-import {
-  musicSourceUrl,
-  parseMusicSource,
-  type MusicSource,
-  type MusicTrack,
-} from "@/music/source";
+import type { LyricLine } from "@/music/lyrics";
+import type { MusicTrack } from "@/music/source";
 
-export function MusicLibrary({ configured }: { configured: boolean }) {
+export function MusicLibrary({ tracks }: { tracks: MusicTrack[] }) {
   const { t } = useI18n();
-  const player = useMusic();
-  const request = useRef<AbortController | null>(null);
-  const [value, setValue] = useState("");
-  const [source, setSource] = useState<MusicSource | null>(null);
-  const [status, setStatus] = useState<
-    "musicLoading" | "musicInvalidLink" | "musicLookupFailed" | "musicNoTracks" | null
-  >(null);
+  const { queue, index, load, select, time } = useMusic();
+  const selected = queue[index]?.id ?? tracks[0]?.id;
 
-  useEffect(() => () => request.current?.abort(), []);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    request.current?.abort();
-    const input = parseMusicSource(value);
-    setSource(input);
-    if (!input) {
-      setStatus("musicInvalidLink");
-      return;
-    }
-    const controller = new AbortController();
-    request.current = controller;
-    setStatus("musicLoading");
-    try {
-      const response = await fetch(`/api/music?kind=${input.kind}&id=${input.id}`, {
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("Music lookup failed");
-      const { tracks }: { tracks: MusicTrack[] } = await response.json();
-      if (controller.signal.aborted) return;
-      if (!tracks.length) {
-        setStatus("musicNoTracks");
-        return;
-      }
-      player.load(tracks);
-      setStatus(null);
-    } catch {
-      if (!controller.signal.aborted) setStatus("musicLookupFailed");
-    }
-  }
+  useEffect(() => load(tracks), [tracks, load]);
 
   return (
     <div className="music-library">
-      <MusicCard full />
       <section className="panel music-library-panel">
-        <h2>{t("musicLoadHeading")}</h2>
-        <form onSubmit={submit}>
-          <label htmlFor="music-link">{t("musicLinkLabel")}</label>
-          <input
-            id="music-link"
-            type="url"
-            required
-            maxLength={2048}
-            placeholder="https://music.163.com/#/song?id=…"
-            value={value}
-            onChange={(event) => setValue(event.currentTarget.value)}
-          />
-          <button className="button primary" disabled={!configured || status === "musicLoading"}>
-            {t("musicLoadQueue")}
-          </button>
-        </form>
-        <p role="status">
-          {t(!configured ? "musicServiceUnavailable" : (status ?? "musicQueueHelp"))}
-        </p>
-        {source && (
-          <a
-            className="text-link"
-            href={musicSourceUrl(source)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("musicOpenInput")}
-          </a>
-        )}
-        {player.queue.length > 0 && (
-          <>
-            <h2>{t("musicQueue")}</h2>
-            <ol className="music-queue">
-              {player.queue.map((track, index) => (
-                <li key={track.id}>
-                  <button
-                    type="button"
-                    aria-current={index === player.index ? "true" : undefined}
-                    onClick={() => player.select(index)}
-                  >
-                    <Play size={14} aria-hidden="true" />
-                    <span>{track.title}</span>
-                    {track.artist && <small>{track.artist}</small>}
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </>
-        )}
+        <h2>{t("musicQueue")}</h2>
+        {tracks.length === 0 && <p>{t("musicLibraryEmpty")}</p>}
+        <ol className="music-queue">
+          {tracks.map((track) => (
+            <li key={track.id}>
+              <button
+                type="button"
+                aria-current={track.id === selected ? "true" : undefined}
+                onClick={() => select(queue.findIndex((item) => item.id === track.id))}
+              >
+                <Play size={14} aria-hidden="true" />
+                <span>{track.title}</span>
+                {track.artist && <small>{track.artist}</small>}
+              </button>
+            </li>
+          ))}
+        </ol>
+      </section>
+      <section className="panel music-library-panel">
+        <h2>{t("musicLyrics")}</h2>
+        {tracks.length > 0 && <MusicCard full />}
+        <MusicLyrics key={selected} id={selected} time={time} />
       </section>
     </div>
+  );
+}
+
+function MusicLyrics({ id, time }: { id?: string; time: number }) {
+  const { t } = useI18n();
+  const [lines, setLines] = useState<LyricLine[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const panel = useRef<HTMLOListElement>(null);
+  const activeLine = useRef<HTMLLIElement>(null);
+  const active = lines?.findLastIndex((line) => line.time !== null && line.time <= time) ?? -1;
+
+  useEffect(() => {
+    if (!id) return;
+    const request = new AbortController();
+    async function loadLyrics() {
+      try {
+        const response = await fetch(`/api/music?kind=lyrics&id=${id}`, { signal: request.signal });
+        if (!response.ok) throw new Error("Lyrics unavailable");
+        const data: { lines: LyricLine[] } = await response.json();
+        if (!request.signal.aborted) setLines(data.lines);
+      } catch {
+        if (!request.signal.aborted) setFailed(true);
+      }
+    }
+    void loadLyrics();
+    return () => request.abort();
+  }, [id]);
+
+  useEffect(() => {
+    const line = activeLine.current;
+    const list = panel.current;
+    if (line && list) list.scrollTop = line.offsetTop - (list.clientHeight - line.offsetHeight) / 2;
+  }, [active]);
+
+  return (
+    <>
+      {lines?.length ? (
+        <ol className="music-lyrics" ref={panel}>
+          {lines.map((line, i) => (
+            <li
+              key={i}
+              ref={i === active ? activeLine : null}
+              aria-current={i === active ? "true" : undefined}
+            >
+              {line.text}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p role="status">
+          {t(
+            !id
+              ? "musicLyricsSelect"
+              : failed
+                ? "musicLyricsUnavailable"
+                : lines
+                  ? "musicLyricsEmpty"
+                  : "musicLoading",
+          )}
+        </p>
+      )}
+    </>
   );
 }

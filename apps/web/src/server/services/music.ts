@@ -1,4 +1,5 @@
 import "server-only";
+import { parseLyrics } from "@/music/lyrics";
 import { musicIdPattern, type MusicSource, type MusicTrack } from "@/music/source";
 
 export const musicQueueLimit = 100;
@@ -95,4 +96,10 @@ export async function musicStream(id: string) {
   if (!Array.isArray(result.data)) throw new Error("Invalid playback response");
   const track = result.data.map(object).find((value) => String(value.id) === id);
   return track?.code === 200 && track.freeTrialInfo == null ? cdnUrl(track.url) : null;
+}
+
+export async function musicLyrics(id: string) {
+  const result = await musicRequest("lyric", { id });
+  const lyric = object(result.lrc).lyric;
+  return typeof lyric === "string" ? parseLyrics(lyric) : [];
 }

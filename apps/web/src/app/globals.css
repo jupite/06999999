@@ -642,6 +642,51 @@ p {
 }
 .music-library-panel {
   padding: 24px;
+  min-width: 0;
+}
+.music-player-inline {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.music-player-inline .record {
+  width: 48px;
+  height: 48px;
+}
+.music-player-inline .record svg {
+  width: 34px;
+  height: 34px;
+}
+.music-lyrics {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0 10px 0 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.music-lyrics li {
+  padding: 5px 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.music-lyrics li[aria-current="true"] {
+  color: var(--text);
+  font-weight: 700;
+}
+.music-admin-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.music-admin-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
 }
 .music-library-panel h2 {
   margin-top: 0;
@@ -651,10 +696,6 @@ p {
   display: grid;
   justify-items: start;
   gap: 10px;
-}
-.music-library-panel .text-link {
-  display: inline-block;
-  margin-bottom: 16px;
 }
 .music-queue {
   margin: 0;
@@ -1047,7 +1088,7 @@ p {
   gap: 8px;
   margin-bottom: 20px;
 }
-.music-library-panel input,
+.music-library-panel input[type="url"],
 .draft-title input,
 .draft-title select {
   width: 100%;
@@ -1059,7 +1100,7 @@ p {
   color: var(--text);
   font: inherit;
 }
-.music-library-panel input:focus-visible,
+.music-library-panel input[type="url"]:focus-visible,
 .draft-title input:focus-visible,
 .draft-title select:focus-visible {
   outline: 2px solid var(--accent);

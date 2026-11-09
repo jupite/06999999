@@ -1,6 +1,9 @@
 import { MusicLibrary } from "@/components/music-library";
 import { getI18n } from "@/i18n/server";
-import { musicConfigured } from "@/server/services/music";
+import { getDb } from "@/server/db";
+import { listMusicLibrary } from "@/server/services/music-library";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const { t } = await getI18n();
@@ -9,6 +12,7 @@ export async function generateMetadata() {
 
 export default async function MusicPage() {
   const { t } = await getI18n();
+  const tracks = process.env.DATABASE_URL ? await listMusicLibrary(getDb()) : [];
   return (
     <>
       <div className="page-heading">
@@ -18,7 +22,7 @@ export default async function MusicPage() {
         </h1>
         <p>{t("musicDescription")}</p>
       </div>
-      <MusicLibrary configured={musicConfigured()} />
+      <MusicLibrary tracks={tracks} />
     </>
   );
 }

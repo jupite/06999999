@@ -4,7 +4,15 @@ import { useI18n } from "@/i18n/client";
 import { LocaleLink } from "@/i18n/link";
 import { localePath } from "@/i18n/routing";
 import { musicSourceUrl, type MusicTrack } from "@/music/source";
-import { createContext, useContext, useRef, useState, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 import { Music2, Pause, Play, SkipBack, SkipForward, X, Disc3, GripHorizontal } from "lucide-react";
 import { usePathname } from "next/navigation";
 type Player = {
@@ -33,12 +41,13 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<MusicTrack[]>([]);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [engaged, setEngaged] = useState(false);
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<Player["error"]>("");
 
-  function resetTrack() {
+  const resetTrack = useCallback(() => {
     request.current?.abort();
     request.current = null;
     const element = audio.current;
@@ -52,17 +61,38 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     setTime(0);
     setDuration(0);
     setError("");
-  }
+  }, []);
 
-  function load(tracks: MusicTrack[]) {
-    resetTrack();
-    setQueue(tracks);
-    setIndex(0);
-  }
+  const load = useCallback(
+    (tracks: MusicTrack[]) => {
+      if (
+        tracks.length === queue.length &&
+        tracks.every((track, i) => {
+          const previous = queue[i];
+          return (
+            track.id === previous.id &&
+            track.title === previous.title &&
+            track.artist === previous.artist &&
+            track.coverUrl === previous.coverUrl
+          );
+        })
+      )
+        return;
+      const next = tracks.findIndex((track) => track.id === queue[index]?.id);
+      if (next < 0) {
+        resetTrack();
+        setEngaged(false);
+      }
+      setQueue(tracks);
+      setIndex(Math.max(0, next));
+    },
+    [queue, index, resetTrack],
+  );
 
   async function play(track: MusicTrack) {
     const element = audio.current;
     if (!element) return;
+    setEngaged(true);
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -166,7 +196,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
           if (index + 1 < queue.length) select(index + 1);
         }}
       />
-      <FloatingPlayer />
+      {engaged && <FloatingPlayer />}
     </Context.Provider>
   );
 }
@@ -181,10 +211,12 @@ export function MusicCard({ full = false }: { full?: boolean }) {
   const track = player.queue[player.index];
   const pause = player.playing || player.loading;
   return (
-    <section className="panel music-card">
-      <div className="eyebrow">
-        <Music2 size={13} /> MUSIC CORNER
-      </div>
+    <section className={full ? "music-player-inline" : "panel music-card"}>
+      {!full && (
+        <div className="eyebrow">
+          <Music2 size={13} /> MUSIC CORNER
+        </div>
+      )}
       <div className="music-heading">
         <div className={`record ${player.playing ? "spinning" : ""}`}>
           {track?.coverUrl ? (
@@ -244,7 +276,7 @@ export function MusicCard({ full = false }: { full?: boolean }) {
           <SkipForward size={17} />
         </button>
       </div>
-      {full && track && (
+      {full && track && player.error && (
         <a
           className="text-link"
           href={musicSourceUrl({ kind: "song", id: track.id })}

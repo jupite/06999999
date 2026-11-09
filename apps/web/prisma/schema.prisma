@@ -175,6 +175,13 @@ model SiteSettings {
   moderationRules String @default("")
   updatedAt DateTime @updatedAt
 }
+model MusicLibraryTrack {
+  position Int @id @default(autoincrement())
+  id       String @unique
+  title    String
+  artist   String
+  coverUrl String?
+}
 model AuditLog {
   id        String @id @default(cuid())
   actorId   String
