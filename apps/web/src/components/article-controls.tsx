@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n, type Notice } from "@/i18n/client";
+import { localePath } from "@/i18n/routing";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -8,7 +9,7 @@ import {
   deletePublishedArticleAction,
   reviewArticleAction,
   copyRejectedArticleAction,
-} from "@/app/articles/actions";
+} from "@/app/[lang]/articles/actions";
 
 export function SubmitArticleButton({
   id,
@@ -23,7 +24,7 @@ export function SubmitArticleButton({
   disabled: boolean;
   onBusyChange: (busy: boolean) => void;
 }) {
-  const { t, notice } = useI18n();
+  const { locale, t, notice } = useI18n();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<Notice | null>(null);
   const router = useRouter();
@@ -44,11 +45,11 @@ export function SubmitArticleButton({
                 setError({ system: result.error });
                 return;
               }
-              router.replace(
+              const path =
                 result.state === "PUBLISHED"
                   ? `/articles/${result.slug}`
-                  : `/my-articles/${result.id}`,
-              );
+                  : `/my-articles/${result.id}`;
+              router.replace(localePath(locale, path));
             } catch {
               setError("submitNetworkError");
             } finally {
@@ -64,7 +65,7 @@ export function SubmitArticleButton({
   );
 }
 export function ReviewArticleForm({ id, version }: { id: string; version: number }) {
-  const { t, notice } = useI18n();
+  const { locale, t, notice } = useI18n();
   const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<Notice | null>(null);
@@ -83,7 +84,7 @@ export function ReviewArticleForm({ id, version }: { id: string; version: number
           setError({ system: result.error });
           return;
         }
-        router.replace("/admin/reviews");
+        router.replace(localePath(locale, "/admin/reviews"));
         router.refresh();
       } catch {
         setError("reviewNetworkError");
@@ -117,7 +118,7 @@ export function ReviewArticleForm({ id, version }: { id: string; version: number
   );
 }
 export function CopyRejectedButton({ id, version }: { id: string; version: number }) {
-  const { t, notice } = useI18n();
+  const { locale, t, notice } = useI18n();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<Notice | null>(null);
   const router = useRouter();
@@ -135,7 +136,7 @@ export function CopyRejectedButton({ id, version }: { id: string; version: numbe
                 setError({ system: result.error });
                 return;
               }
-              router.push(`/write?id=${result.id}`);
+              router.push(localePath(locale, `/write?id=${result.id}`));
             } catch {
               setError("copyNetworkError");
             }

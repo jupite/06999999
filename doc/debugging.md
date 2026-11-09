@@ -25,7 +25,7 @@ Next.js 从 apps/web 读取现有 .env，不需要把密钥复制到 launch.json
 ## 用保存草稿练习
 
 - 前端断点：`apps/web/src/components/markdown-editor.tsx` 中 `saveDraftAction(draft)` 所在行。
-- 服务端断点：`apps/web/src/app/write/actions.ts` 中 `currentActor()` 或事务调用所在行。
+- 服务端断点位于 `apps/web/src/app/[lang]/write/actions.ts` 的 `currentActor()` 或事务调用所在行。
 - 数据库服务断点：`apps/web/src/server/services/drafts.ts` 中 `saveDraft()` 内解析输入的位置。
 
 登录后进入“我的草稿”，新建文章并点击保存。前端断点可查看 draft 的标题和正文，继续执行会进入服务端断点，再查看 actor、输入版本及数据库操作结果。

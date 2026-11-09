@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 export async function ArticlePagination({
   page,
   more,
@@ -13,21 +13,21 @@ export async function ArticlePagination({
   return (
     <nav className="draft-actions" aria-label={t("pagination")}>
       {page > 1 && (
-        <Link
+        <LocaleLink
           className="button secondary"
           href={`${base}${base.includes("?") ? "&" : "?"}page=${page - 1}`}
         >
           {t("previousPage")}
-        </Link>
+        </LocaleLink>
       )}
       <span>{t("pageNumber", { page })}</span>
       {more && (
-        <Link
+        <LocaleLink
           className="button secondary"
           href={`${base}${base.includes("?") ? "&" : "?"}page=${page + 1}`}
         >
           {t("nextPage")}
-        </Link>
+        </LocaleLink>
       )}
     </nav>
   );
@@ -44,9 +44,9 @@ export async function ArticleAccessNotice({
     <section className="panel empty-state">
       <h1>{signedIn ? t("noAccess") : t("signInRequired")}</h1>
       <p>{reason}</p>
-      <Link className="button" href="/login">
+      <LocaleLink className="button" href="/login">
         {signedIn ? t("viewAccount") : t("goLogin")}
-      </Link>
+      </LocaleLink>
     </section>
   );
 }
@@ -68,20 +68,20 @@ export async function ArticleNavigation({ active }: { active?: "write" | "mine" 
   const { t } = await getI18n();
   return (
     <nav className="article-navigation" aria-label={t("articleNav")}>
-      <Link
+      <LocaleLink
         href="/write"
         className={active === "write" ? "button" : "button secondary"}
         aria-current={active === "write" ? "page" : undefined}
       >
         {t("writeArticle")}
-      </Link>
-      <Link
+      </LocaleLink>
+      <LocaleLink
         href="/my-articles"
         className={active === "mine" ? "button" : "button secondary"}
         aria-current={active === "mine" ? "page" : undefined}
       >
         {t("myArticles")}
-      </Link>
+      </LocaleLink>
     </nav>
   );
 }

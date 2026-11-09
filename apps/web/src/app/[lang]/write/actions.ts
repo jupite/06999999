@@ -10,8 +10,8 @@ export async function saveDraftAction(input: unknown) {
   try {
     const actor = await currentActor();
     const draft = await getDb().$transaction((tx) => saveDraft(tx, actor, input));
-    revalidatePath("/drafts");
-    revalidatePath("/my-articles");
+    revalidatePath("/[lang]/drafts", "page");
+    revalidatePath("/[lang]/my-articles", "page");
     return { ok: true as const, draft };
   } catch (error) {
     return {
@@ -24,8 +24,8 @@ export async function deleteDraftAction(id: unknown, version: unknown) {
   try {
     const actor = await currentActor();
     await getDb().$transaction((tx) => deleteDraft(tx, actor, id, version));
-    revalidatePath("/drafts");
-    revalidatePath("/my-articles");
+    revalidatePath("/[lang]/drafts", "page");
+    revalidatePath("/[lang]/my-articles", "page");
     return { ok: true as const };
   } catch (error) {
     return {

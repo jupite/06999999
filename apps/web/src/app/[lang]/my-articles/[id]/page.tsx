@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { notFound } from "next/navigation";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
@@ -67,19 +67,19 @@ export default async function MyArticlePage({ params }: { params: Promise<{ id: 
           </>
         )}
         {revision.state === "DRAFT" && (
-          <Link className="button" href={`/write?id=${article.id}`}>
+          <LocaleLink className="button" href={`/write?id=${article.id}`}>
             {t("continueEditing")}
-          </Link>
+          </LocaleLink>
         )}
         {canEditPublished && (
-          <Link className="button" href={`/write?id=${article.id}`}>
+          <LocaleLink className="button" href={`/write?id=${article.id}`}>
             {revision.state === "REJECTED" ? t("editAndResubmit") : t("editArticle")}
-          </Link>
+          </LocaleLink>
         )}
         {published && (
-          <Link className="button" href={`/articles/${article.slug}`}>
+          <LocaleLink className="button" href={`/articles/${article.slug}`}>
             {t("viewPublished")}
-          </Link>
+          </LocaleLink>
         )}
         <ArticleBody markdown={revision.markdown} />
       </section>

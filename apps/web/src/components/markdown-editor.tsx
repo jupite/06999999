@@ -1,14 +1,15 @@
 "use client";
 
 import { useI18n, type Notice } from "@/i18n/client";
+import { localePath } from "@/i18n/routing";
 import type { MessageKey } from "@/i18n/messages";
 import { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { saveDraftAction } from "@/app/write/actions";
-import { submitArticleEditAction } from "@/app/articles/actions";
+import { saveDraftAction } from "@/app/[lang]/write/actions";
+import { submitArticleEditAction } from "@/app/[lang]/articles/actions";
 import { SubmitArticleButton } from "./article-controls";
 
 type Draft = { id?: string; version: number; title: string; markdown: string };
@@ -23,7 +24,7 @@ export function MarkdownEditor({
   canSubmit: boolean;
   publishedEdit?: boolean;
 }) {
-  const { t, notice } = useI18n();
+  const { locale, t, notice } = useI18n();
   const [draft, setDraft] = useState(initialDraft);
   const [dirty, setDirty] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -49,14 +50,14 @@ export function MarkdownEditor({
   return (
     <>
       <div className="editor-toolbar">
-        <Link
+        <LocaleLink
           href={publishedEdit ? `/my-articles/${draft.id}` : "/my-articles?status=draft"}
           onClick={(event) => {
             if (dirty && !window.confirm(t("unsavedConfirm"))) event.preventDefault();
           }}
         >
           {publishedEdit ? t("backToStatus") : t("backToDrafts")}
-        </Link>
+        </LocaleLink>
         <span>
           {dirty
             ? t("unsaved")
@@ -89,11 +90,11 @@ export function MarkdownEditor({
                   return;
                 }
                 setDirty(false);
-                router.replace(
+                const path =
                   result.state === "PUBLISHED"
                     ? `/articles/${result.slug}`
-                    : `/my-articles/${result.id}`,
-                );
+                    : `/my-articles/${result.id}`;
+                router.replace(localePath(locale, path));
                 return;
               }
               const result = await saveDraftAction(draft);
@@ -105,9 +106,12 @@ export function MarkdownEditor({
               setDirty(false);
               setMessage("draftSaved");
               if (!draft.id)
-                router.replace(`/write?id=${encodeURIComponent(result.draft.id)}`, {
-                  scroll: false,
-                });
+                router.replace(
+                  localePath(locale, `/write?id=${encodeURIComponent(result.draft.id)}`),
+                  {
+                    scroll: false,
+                  },
+                );
             } catch {
               setError(publishedEdit ? "editNetworkError" : "saveNetworkError");
             }

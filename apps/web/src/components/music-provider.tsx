@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/i18n/client";
+import { localePath } from "@/i18n/routing";
 import { createContext, useContext, useRef, useState, useEffect, type ReactNode } from "react";
 import { Music2, Pause, Play, SkipBack, SkipForward, X, Disc3, GripHorizontal } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -123,7 +124,7 @@ export function MusicCard() {
   );
 }
 function FloatingPlayer() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const player = useContext(Context)!;
   const path = usePathname();
   const [hidden, setHidden] = useState(false);
@@ -132,7 +133,7 @@ function FloatingPlayer() {
   useEffect(() => {
     setHidden(false);
   }, [player.index, player.queue]);
-  if (!player.queue.length || path === "/music") return null;
+  if (!player.queue.length || path === localePath(locale, "/music")) return null;
   if (hidden)
     return (
       <button

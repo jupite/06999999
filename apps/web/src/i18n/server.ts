@@ -1,18 +1,17 @@
 import "server-only";
-import { cookies } from "next/headers";
-import { defaultLocale, getTranslator, isLocale, type Dictionary, type Locale } from "./messages";
+import { notFound } from "next/navigation";
+import { lang } from "next/root-params";
+import { getTranslator, isLocale, type Dictionary, type Locale } from "./messages";
 import { getSystemTranslator } from "./system-messages";
 
-export const localeCookie = "site-locale";
-
 const dictionaries = {
-  "zh-CN": () => import("./dictionaries/zh.json").then((module) => module.default),
+  zh: () => import("./dictionaries/zh.json").then((module) => module.default),
   en: () => import("./dictionaries/en.json").then((module) => module.default),
 } satisfies Record<Locale, () => Promise<Dictionary>>;
 
 export async function getI18n() {
-  const value = (await cookies()).get(localeCookie)?.value;
-  const locale = isLocale(value) ? value : defaultLocale;
+  const locale = await lang();
+  if (!isLocale(locale)) notFound();
   const dictionary = await dictionaries[locale]();
   return {
     locale,

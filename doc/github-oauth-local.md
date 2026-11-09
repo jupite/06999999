@@ -41,9 +41,9 @@ OWNER_GITHUB_ID=填写站主账号的数字ID
 
 在项目根目录运行 `pnpm dev`，若服务已启动，先停止再重启。
 
-1. 打开 http://localhost:3000/login ，确认 GitHub 登录按钮已启用。
+1. 打开 http://localhost:3000/zh/login ，确认 GitHub 登录按钮已启用。
 2. 点击登录，在 GitHub 完成授权，返回网站。
-3. 打开 http://localhost:3000/admin ，站主账号应显示“站主身份校验已通过”。
+3. 打开 http://localhost:3000/zh/admin ，站主账号应显示“站主身份校验已通过”。
 4. 在未登录的隐私窗口打开管理页，应提示“请先登录”。
 5. 若有普通测试账号，其登录后应无法获得站主管理权限。
 

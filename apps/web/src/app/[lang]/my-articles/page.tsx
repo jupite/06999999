@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { listMyArticles } from "@/server/services/articles";
@@ -54,14 +54,14 @@ export default async function MyArticlesPage({
       </div>
       <nav className="article-filters" aria-label={t("articleFilters")}>
         {Object.entries(articleFilters).map(([value, label]) => (
-          <Link
+          <LocaleLink
             key={value}
             href={`/my-articles?status=${value}`}
             className={value === status ? "button" : "button secondary"}
             aria-current={value === status ? "page" : undefined}
           >
             {t(label)}
-          </Link>
+          </LocaleLink>
         ))}
       </nav>
       <div className="draft-list">
@@ -78,7 +78,7 @@ export default async function MyArticlesPage({
                     : t(articleStateLabels[revision.state])}
                 </p>
                 <div className="draft-actions">
-                  <Link
+                  <LocaleLink
                     className="button secondary"
                     href={
                       revision.state === "DRAFT"
@@ -91,7 +91,7 @@ export default async function MyArticlesPage({
                       : revision.state === "PUBLISHED"
                         ? t("viewArticle")
                         : t("viewSubmission")}
-                  </Link>
+                  </LocaleLink>
                   {canEdit && revision.state === "DRAFT" && (
                     <DeleteDraftButton
                       id={article.id}
@@ -103,9 +103,9 @@ export default async function MyArticlesPage({
                     canEdit &&
                     canSubmit &&
                     (revision.state === "PUBLISHED" || revision.state === "REJECTED") && (
-                      <Link className="button secondary" href={`/write?id=${article.id}`}>
+                      <LocaleLink className="button secondary" href={`/write?id=${article.id}`}>
                         {t("editArticle")}
-                      </Link>
+                      </LocaleLink>
                     )}
                   {published && canEdit && (
                     <DeletePublishedArticleButton

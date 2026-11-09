@@ -3,7 +3,7 @@ import { GitHubLogin } from "@/components/github-login";
 import { authConfigured, currentActor } from "@/server/auth";
 import { authorize } from "@/server/domain/permissions";
 import { SignOutButton } from "@/components/account-menu";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { Moon } from "lucide-react";
 export async function generateMetadata() {
   const { t } = await getI18n();
@@ -29,14 +29,14 @@ export default async function LoginPage({
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
           {canManage && (
-            <Link className="button" href="/admin">
+            <LocaleLink className="button" href="/admin">
               {t("goAdmin")}
-            </Link>
+            </LocaleLink>
           )}
           {!actor.banned && (
-            <Link className="button secondary" href="/my-articles">
+            <LocaleLink className="button secondary" href="/my-articles">
               {t("myArticles")}
-            </Link>
+            </LocaleLink>
           )}
           <SignOutButton />
         </div>

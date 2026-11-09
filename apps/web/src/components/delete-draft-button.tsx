@@ -2,7 +2,7 @@
 
 import { useI18n, type Notice } from "@/i18n/client";
 import { useState, useTransition } from "react";
-import { deleteDraftAction } from "@/app/write/actions";
+import { deleteDraftAction } from "@/app/[lang]/write/actions";
 export function DeleteDraftButton({
   id,
   version,

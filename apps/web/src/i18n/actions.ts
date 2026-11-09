@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { isLocale } from "./messages";
-import { localeCookie } from "./server";
+import { localeCookie } from "./routing";
 
 export async function setSiteLocale(locale: unknown) {
   if (!isLocale(locale)) return false;

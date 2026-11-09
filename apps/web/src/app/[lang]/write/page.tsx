@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { ArticleNavigation } from "@/components/article-shared";
 import { notFound } from "next/navigation";
 import { MarkdownEditor } from "@/components/markdown-editor";
@@ -27,9 +27,9 @@ export default async function WritePage({
       <section className="panel empty-state">
         <h1>{t("articleDraft")}</h1>
         <p>{system(access.reason)}</p>
-        <Link className="button" href="/login">
+        <LocaleLink className="button" href="/login">
           {actor ? t("viewAccountShort") : t("goLogin")}
-        </Link>
+        </LocaleLink>
       </section>
     );
   if (id !== undefined && (typeof id !== "string" || !id || id.length > 100)) notFound();
@@ -56,9 +56,9 @@ export default async function WritePage({
         <section className="panel empty-state">
           <h1>{t("alreadySubmitted")}</h1>
           <p>{t("checkArticleStatus")}</p>
-          <Link className="button" href={`/my-articles/${submitted.id}`}>
+          <LocaleLink className="button" href={`/my-articles/${submitted.id}`}>
             {t("viewArticleStatus")}
-          </Link>
+          </LocaleLink>
         </section>
       );
     }

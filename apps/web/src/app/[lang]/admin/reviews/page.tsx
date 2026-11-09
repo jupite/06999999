@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { currentActor } from "@/server/auth";
 import { authorize } from "@/server/domain/permissions";
 import { getDb } from "@/server/db";
@@ -25,7 +25,7 @@ export default async function ReviewsPage({
   const articles = await listPendingArticles(getDb(), actor, page);
   return (
     <>
-      <Link href="/admin">{t("backToAdmin")}</Link>
+      <LocaleLink href="/admin">{t("backToAdmin")}</LocaleLink>
       <div className="page-heading">
         <h1>{t("articleReview")}</h1>
         <p>{t("reviewsDescription")}</p>
@@ -38,9 +38,9 @@ export default async function ReviewsPage({
               {t("authorLabel", { author: article.author.name })}
               {article.author.banned ? t("bannedMarker") : ""}
             </p>
-            <Link className="button" href={`/admin/reviews/${article.id}`}>
+            <LocaleLink className="button" href={`/admin/reviews/${article.id}`}>
               {t("openReview")}
-            </Link>
+            </LocaleLink>
           </article>
         ))}
       </div>

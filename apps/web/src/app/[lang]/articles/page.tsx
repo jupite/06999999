@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { getDb } from "@/server/db";
 import { listPublishedArticles } from "@/server/services/articles";
 import { articlePage } from "@/server/domain/articles";
@@ -32,15 +32,15 @@ export default async function ArticlesPage({
         {articles.slice(0, 20).map((article) => (
           <article key={article.slug} className="panel draft-card">
             <h2>
-              <Link href={`/articles/${article.slug}`}>{article.title}</Link>
+              <LocaleLink href={`/articles/${article.slug}`}>{article.title}</LocaleLink>
             </h2>
             <p>
               {t("byline", { author: article.authorName })}
               <ArticleTime value={article.publishedAt} />
             </p>
-            <Link className="button secondary" href={`/articles/${article.slug}`}>
+            <LocaleLink className="button secondary" href={`/articles/${article.slug}`}>
               {t("readMore")}
-            </Link>
+            </LocaleLink>
           </article>
         ))}
       </div>

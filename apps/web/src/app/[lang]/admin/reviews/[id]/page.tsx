@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 
 import { currentActor } from "@/server/auth";
 import { authorize } from "@/server/domain/permissions";
@@ -24,15 +24,15 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
     return (
       <section className="panel empty-state">
         <h1>{t("reviewUnavailable")}</h1>
-        <Link className="button" href="/admin/reviews">
+        <LocaleLink className="button" href="/admin/reviews">
           {t("backToReviews")}
-        </Link>
+        </LocaleLink>
       </section>
     );
   const revision = article.revisions[0];
   return (
     <>
-      <Link href="/admin/reviews">← {t("backToReviews")}</Link>
+      <LocaleLink href="/admin/reviews">← {t("backToReviews")}</LocaleLink>
       <article className="panel draft-card">
         <h1>{revision.title}</h1>
         <p>{t("reviewVersion", { author: article.author.name, version: revision.version })}</p>

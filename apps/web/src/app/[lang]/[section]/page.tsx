@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { Camera, Code2, Heart, Music2, Moon, Plus } from "lucide-react";
 import { MusicCard } from "@/components/music-provider";
 import { getI18n } from "@/i18n/server";
@@ -61,10 +61,10 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
         <h2>{t(`${section}Empty`)}</h2>
         <p>{t(`${section}Detail`)}</p>
         {section !== "about" && (
-          <Link className="button secondary" href="/login">
+          <LocaleLink className="button secondary" href="/login">
             <Plus size={16} />
             {t("signInDetails")}
-          </Link>
+          </LocaleLink>
         )}
         <span className="empty-footnote">{t("sectionPreview")}</span>
       </section>

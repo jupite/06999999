@@ -1,9 +1,9 @@
 import type chinese from "./dictionaries/zh.json";
 import type english from "./dictionaries/en.json";
 
-export const locales = ["zh-CN", "en"] as const;
+export const locales = ["zh", "en"] as const;
 export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "zh-CN";
+export const defaultLocale: Locale = "zh";
 
 export type MessageKey = keyof typeof chinese.messages | keyof typeof english.messages;
 export type SystemKey = keyof typeof chinese.system | keyof typeof english.system;

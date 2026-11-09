@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/server/db";
 import { readPublishedArticle } from "@/server/services/articles";
@@ -18,7 +18,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <ArticleNavigation />
-      <Link href="/articles">{t("backToArticles")}</Link>
+      <LocaleLink href="/articles">{t("backToArticles")}</LocaleLink>
       <article className="panel draft-card">
         <h1>{article.title}</h1>
         <p>

@@ -1,5 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { locales } from "@/i18n/messages";
+import { localePath } from "@/i18n/routing";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { ArticleError } from "@/server/domain/articles";
@@ -14,10 +16,12 @@ import {
 
 function refreshArticles(slug?: string) {
   for (const path of ["/drafts", "/my-articles", "/articles", "/admin/reviews"])
-    revalidatePath(path);
-  revalidatePath("/my-articles/[id]", "page");
-  revalidatePath("/admin/reviews/[id]", "page");
-  if (slug) revalidatePath(`/articles/${slug}`);
+    revalidatePath(`/[lang]${path}`, "page");
+  revalidatePath("/[lang]/my-articles/[id]", "page");
+  revalidatePath("/[lang]/admin/reviews/[id]", "page");
+  if (slug) {
+    for (const locale of locales) revalidatePath(localePath(locale, `/articles/${slug}`));
+  }
 }
 function failure(error: unknown) {
   return {

@@ -1,5 +1,5 @@
 import { getI18n } from "@/i18n/server";
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { ArrowUpRight, BookOpen, Camera, Code2, Moon, Feather, Sparkles } from "lucide-react";
 import { MusicCard } from "@/components/music-provider";
 export default async function Home() {
@@ -31,22 +31,22 @@ export default async function Home() {
           </p>
           <div className="profile-bottom">
             <div className="profile-stats">
-              <Link href="/articles">
+              <LocaleLink href="/articles">
                 <b>{t("articles")}</b>
                 <span>{t("articleBlurb")}</span>
-              </Link>
-              <Link href="/projects">
+              </LocaleLink>
+              <LocaleLink href="/projects">
                 <b>{t("projects")}</b>
                 <span>{t("projectBlurb")}</span>
-              </Link>
-              <Link href="/photos">
+              </LocaleLink>
+              <LocaleLink href="/photos">
                 <b>{t("photo")}</b>
                 <span>{t("photoBlurb")}</span>
-              </Link>
+              </LocaleLink>
             </div>
-            <Link className="round-button" href="/about" aria-label={t("learnAboutSite")}>
+            <LocaleLink className="round-button" href="/about" aria-label={t("learnAboutSite")}>
               <ArrowUpRight size={20} />
-            </Link>
+            </LocaleLink>
           </div>
         </section>
         <MusicCard />
@@ -57,7 +57,7 @@ export default async function Home() {
         <Sparkles size={17} />
       </div>
       <div className="bento">
-        <Link href="/articles" className="panel feature-card article-card">
+        <LocaleLink href="/articles" className="panel feature-card article-card">
           <div className="orbital-art" aria-hidden="true">
             <div className="orbit orbit-one" />
             <div className="orbit orbit-two" />
@@ -72,8 +72,8 @@ export default async function Home() {
               {t("readArticles")} <ArrowUpRight size={16} />
             </span>
           </div>
-        </Link>
-        <Link href="/photos" className="panel photo-card">
+        </LocaleLink>
+        <LocaleLink href="/photos" className="panel photo-card">
           <div className="photo-decoration" aria-hidden="true" />
           <div>
             <span className="eyebrow">FRAGMENTS OF LIFE</span>
@@ -81,8 +81,8 @@ export default async function Home() {
             <p>{t("photoFeatureText")}</p>
           </div>
           <Camera size={24} />
-        </Link>
-        <Link href="/projects" className="panel project-card">
+        </LocaleLink>
+        <LocaleLink href="/projects" className="panel project-card">
           <div className="card-top">
             <Code2 size={24} />
             <ArrowUpRight size={18} />
@@ -91,8 +91,8 @@ export default async function Home() {
           <h2>{t("projectFeature")}</h2>
           <p>{t("projectFeatureText")}</p>
           <span className="text-link">{t("exploreProjects")}</span>
-        </Link>
-        <Link href="/about" className="panel small-card">
+        </LocaleLink>
+        <LocaleLink href="/about" className="panel small-card">
           <div className="moon-badge">
             <Moon size={30} />
           </div>
@@ -102,29 +102,29 @@ export default async function Home() {
             <br />
             {t("artInProgress")}
           </p>
-        </Link>
+        </LocaleLink>
       </div>
       <div className="section-heading">
         <div>
           <span className="eyebrow">MAKE YOURSELF AT HOME</span>
           <h2>{t("shareFavorites")}</h2>
         </div>
-        <Link href="/write" className="button secondary">
+        <LocaleLink href="/write" className="button secondary">
           <Feather size={16} />
           {t("tryWriting")}
-        </Link>
+        </LocaleLink>
       </div>
       <div className="explore-grid">
-        <Link className="panel explore-card" href="/friends">
+        <LocaleLink className="panel explore-card" href="/friends">
           <Sparkles size={22} />
           <h3>{t("friendsFeature")}</h3>
           <p>{t("friendsFeatureText")}</p>
-        </Link>
-        <Link className="panel explore-card" href="/articles">
+        </LocaleLink>
+        <LocaleLink className="panel explore-card" href="/articles">
           <BookOpen size={22} />
           <h3>{t("writingFeature")}</h3>
           <p>{t("writingFeatureText")}</p>
-        </Link>
+        </LocaleLink>
         <div className="panel explore-card">
           <Moon size={22} />
           <h3>{t("mascotFeature")}</h3>

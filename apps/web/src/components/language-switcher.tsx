@@ -3,9 +3,10 @@
 import { useState, useTransition } from "react";
 import { setSiteLocale } from "@/i18n/actions";
 import { useI18n } from "@/i18n/client";
-import { locales, type Locale } from "@/i18n/messages";
+import { isLocale, locales, type Locale } from "@/i18n/messages";
+import { localePath } from "@/i18n/routing";
 
-const labels: Record<Locale, string> = { "zh-CN": "简体中文", en: "English" };
+const labels: Record<Locale, string> = { zh: "简体中文", en: "English" };
 
 export function LanguageSwitcher() {
   const { locale, t } = useI18n();
@@ -20,10 +21,17 @@ export function LanguageSwitcher() {
         disabled={pending}
         onChange={(event) => {
           const selected = event.currentTarget.value;
+          if (!isLocale(selected) || selected === locale) return;
           setFailed(false);
           startTransition(async () => {
             try {
-              setFailed(!(await setSiteLocale(selected)));
+              if (!(await setSiteLocale(selected))) {
+                setFailed(true);
+                return;
+              }
+              const { pathname, search, hash } = window.location;
+              const path = pathname.slice(locale.length + 1);
+              window.location.assign(`${localePath(selected, path)}${search}${hash}`);
             } catch {
               setFailed(true);
             }

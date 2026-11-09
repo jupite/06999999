@@ -1,8 +1,9 @@
 "use client";
 
 import { useI18n } from "@/i18n/client";
+import { localePath } from "@/i18n/routing";
 
-import Link from "next/link";
+import { LocaleLink } from "@/i18n/link";
 import { Github, UserRound } from "lucide-react";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -10,10 +11,10 @@ import { useState } from "react";
 function LoginLink() {
   const { t } = useI18n();
   return (
-    <Link className="login-link" href="/login">
+    <LocaleLink className="login-link" href="/login">
       <Github size={16} />
       <span>{t("signIn")}</span>
-    </Link>
+    </LocaleLink>
   );
 }
 
@@ -45,7 +46,7 @@ function SessionLink() {
     );
   if (!session?.githubId) return <LoginLink />;
   return (
-    <Link className="login-link" href="/login" aria-label={t("viewSignedInAccount")}>
+    <LocaleLink className="login-link" href="/login" aria-label={t("viewSignedInAccount")}>
       <GitHubAvatar
         key={session.user?.image ?? "default"}
         src={session.user?.image}
@@ -61,7 +62,7 @@ function SessionLink() {
       >
         {session.user?.name || t("signedIn")}
       </span>
-    </Link>
+    </LocaleLink>
   );
 }
 
@@ -75,7 +76,7 @@ export function AccountMenu({ enabled }: { enabled: boolean }) {
 }
 
 export function SignOutButton() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
@@ -87,7 +88,7 @@ export function SignOutButton() {
           setPending(true);
           setFailed(false);
           try {
-            await signOut({ callbackUrl: "/login" });
+            await signOut({ callbackUrl: localePath(locale, "/login") });
           } catch {
             setFailed(true);
             setPending(false);
