@@ -14,6 +14,7 @@ const navigation = [
   ["/music", "music"],
   ["/friends", "friends"],
   ["/about", "about"],
+  ["/docs", "docs"],
 ] as const;
 export function Navigation({ authEnabled }: { authEnabled: boolean }) {
   const { locale, t } = useI18n();
@@ -31,12 +32,14 @@ export function Navigation({ authEnabled }: { authEnabled: boolean }) {
         <nav aria-label={t("primaryNav")}>
           {navigation.map(([path, label]) => {
             const href = localePath(locale, path);
+            const active =
+              pathname === href || (path === "/docs" && pathname.startsWith(`${href}/`));
             return (
               <Link
                 key={href}
                 href={href}
-                aria-current={pathname === href ? "page" : undefined}
-                className={pathname === href ? "active" : ""}
+                aria-current={active ? "page" : undefined}
+                className={active ? "active" : ""}
               >
                 {t(label)}
               </Link>

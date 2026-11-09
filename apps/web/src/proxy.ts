@@ -28,5 +28,6 @@ export const config = {
     "/music",
     "/friends",
     "/about",
+    "/docs/:path*",
   ],
 };

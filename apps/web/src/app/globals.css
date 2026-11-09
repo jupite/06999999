@@ -824,6 +824,41 @@ p {
   padding: 7px;
   border: 1px solid var(--border);
 }
+.docs-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+.docs-nav,
+.docs-content {
+  padding: clamp(18px, 3vw, 32px);
+}
+.docs-nav h2 {
+  margin: 16px 0 6px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.docs-nav ul,
+.docs-index {
+  margin: 0 0 18px;
+  padding-left: 1.25em;
+}
+.docs-nav a:hover,
+.docs-index a:hover {
+  color: var(--accent);
+}
+.docs-content h2 {
+  margin-top: 24px;
+}
+.docs-table {
+  overflow-x: auto;
+}
+@media (max-width: 700px) {
+  .docs-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .floating-player {
   position: fixed;
   z-index: 30;

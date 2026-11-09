@@ -12,6 +12,7 @@
 - [文章图片上传](./article-images.md)记录存储配置、上传权限、配额与审核流程。
 - [项目卡片发布](./project-publishing.md)记录投稿、网址校验、审核和公开展示流程。
 - [音乐播放器](./music-player.md)记录网易云接口配置、链接格式和播放行为。
+- [API 文档](./api-documentation.md)记录网页展示格式草案和已实现接口示例。
 - [视觉参考](./visual-direction.md)：参考截图拆解、配色建议、卡片布局与移动端适配。
 - [部署规划](./deployment-plan.md)：通用部署建议和上线准备。
 - [待确认事项](./pending-decisions.md)：开工前、相关功能实现前和上线前需要明确的细节。
