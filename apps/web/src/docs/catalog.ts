@@ -8,6 +8,6 @@ export const functionDocs = [
   { slug: "i18n", file: "i18n.md", title: "docsInternationalization" },
 ] as const;
 
-export const apiDoc = { slug: "api", file: "api-documentation.md", title: "docsApi" } as const;
+export const apiDoc = { slug: "api", file: "api/README.md", title: "docsApi" } as const;
 
 export const documents = [...functionDocs, apiDoc];

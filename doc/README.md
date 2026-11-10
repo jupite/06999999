@@ -26,5 +26,5 @@
 - [本地 GitHub OAuth 配置](./github-oauth-local.md)说明登录配置与验收步骤。
 - [VS Code 断点调试](./debugging.md)说明全栈、仅服务端和仅前端调试。
 - [国际化方案](./i18n.md)说明语言路由、词典加载和词条维护。
-- [API 文档](./api-documentation.md)汇总 Web、后台权限和 Python 服务的接口契约与示例。
+- [API 文档](./api/README.md)汇总 Web、后台权限和 Python 服务的接口契约与示例。
 - [部署规划](./deployment-plan.md)记录环境和上线准备。
