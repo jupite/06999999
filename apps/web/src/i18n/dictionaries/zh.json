@@ -18,7 +18,7 @@
     "docsFeatures": "功能文档",
     "docsFeaturesDescription": "阅读仓库 doc 目录中的功能文档原文。",
     "docsApi": "API 文档",
-    "docsApiDescription": "查看 API 文档的格式草案和接口示例。",
+    "docsApiDescription": "查看 Web、后台权限和 Python 服务的接口说明。",
     "docsPublishingRules": "发布权限与交互规划",
     "docsPermissions": "用户权限管理",
     "docsArticlePublishing": "文章发布与人工审核",

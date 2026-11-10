@@ -18,7 +18,7 @@
     "docsFeatures": "Feature docs",
     "docsFeaturesDescription": "Read the original Chinese Markdown documents from the repository.",
     "docsApi": "API docs",
-    "docsApiDescription": "Review the proposed API documentation format and a sample endpoint.",
+    "docsApiDescription": "Browse Web, admin permissions, and Python service API references.",
     "docsPublishingRules": "Publishing and interaction",
     "docsPermissions": "User permissions",
     "docsArticlePublishing": "Article publishing and review",
