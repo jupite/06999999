@@ -1,0 +1,37 @@
+apis:
+  web:
+    root: doc/api/web.openapi.yaml
+  python:
+    root: doc/api/python.openapi.json
+  admin-draft:
+    root: doc/api/admin-draft.openapi.yaml
+
+extends:
+  - spec
+
+rules:
+  operation-operationId: error
+  operation-operationId-unique: error
+  operation-summary: error
+  operation-tag-defined: error
+  security-defined: error
+  no-invalid-media-type-examples: error
+  no-invalid-parameter-examples: error
+  rule/operation-id-style:
+    subject:
+      type: Operation
+      property: operationId
+    assertions:
+      pattern: /^[a-z][a-zA-Z0-9]*$/
+  rule/operation-security:
+    subject:
+      type: Operation
+    assertions:
+      required: [security]
+  rule/structured-media-contract:
+    subject:
+      type: MediaType
+      filterInParentKeys: [application/json, application/x-www-form-urlencoded]
+    assertions:
+      required: [schema]
+      requireAny: [example, examples]

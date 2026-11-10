@@ -12,5 +12,6 @@ export { MarkdownEditor } from "./markdown-editor";
 export { MusicLibrary } from "./music-library";
 export { MusicCard, MusicProvider } from "./music-provider";
 export { Navigation } from "./navigation";
+export { OpenApiReference } from "./openapi-reference";
 export { ProjectForm } from "./project-form";
 export { ProjectReviewForm } from "./project-review-form";

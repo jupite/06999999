@@ -7,7 +7,10 @@
   },
   "scripts": {
     "dev": "pnpm --filter @site/web dev",
-    "build": "pnpm --filter @site/web build",
+    "build": "pnpm api:lint && pnpm --filter @site/web build",
+    "api:lint": "redocly lint",
+    "api:python:generate": "uv run --project apps/python-api --locked python apps/python-api/src/export_openapi.py",
+    "api:python:check": "uv run --project apps/python-api --locked python apps/python-api/src/export_openapi.py --check",
     "typecheck": "pnpm --filter @site/web typecheck",
     "test": "pnpm --filter @site/web test",
     "db:generate": "pnpm --filter @site/web db:generate",
@@ -23,6 +26,7 @@
     "test:projects": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/project-sites.integration.test.ts"
   },
   "devDependencies": {
+    "@redocly/cli": "2.76.0",
     "prettier": "3.9.9"
   }
 }

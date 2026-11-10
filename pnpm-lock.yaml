@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@redocly/cli':
+        specifier: 2.76.0
+        version: 2.76.0
       prettier:
         specifier: 3.9.9
         version: 3.9.9
@@ -56,6 +59,9 @@ importers:
       sharp:
         specifier: 0.35.5
         version: 0.35.5(@types/node@24.19.0)
+      swagger-ui-dist:
+        specifier: 5.34.1
+        version: 5.34.1
       unified:
         specifier: 11.0.5
         version: 11.0.5
@@ -617,6 +623,14 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@redocly/cli@2.76.0':
+    resolution: {integrity: sha512-o967iiLTq4B9oPDBqclurfLn3HOhQvYNwJ+BEkZoW/p5PwIycqIoaNv+Q+Uabb4cH/XnSyo646tCAscnjzZ6Ig==}
+    engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
+    hasBin: true
+
+  '@scarf/scarf@1.4.0':
+    resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -1523,6 +1537,9 @@ packages:
       babel-plugin-macros:
         optional: true
 
+  swagger-ui-dist@5.34.1:
+    resolution: {integrity: sha512-VSr8fXfI93obYaQicLJbLUKGRxDojj/SfRJDDLCioGTUBj4BK/Nj4eE9jCeCAnJxVLi7iS+08PbiZLyrQKBkJQ==}
+
   trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
 
@@ -1992,6 +2009,10 @@ snapshots:
       react: 19.3.0
     optionalDependencies:
       '@types/react': 19.3.0
+
+  '@redocly/cli@2.76.0': {}
+
+  '@scarf/scarf@1.4.0': {}
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -3170,6 +3191,10 @@ snapshots:
     dependencies:
       client-only: 0.0.1
       react: 19.3.0
+
+  swagger-ui-dist@5.34.1:
+    dependencies:
+      '@scarf/scarf': 1.4.0
 
   trim-lines@3.0.1: {}
 

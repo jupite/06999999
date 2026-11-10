@@ -1,0 +1,384 @@
+openapi: 3.1.0
+info:
+  title: Web 接口
+  version: 0.1.0
+  description: 已实现的 Next.js HTTP 接口。
+servers:
+  - url: /
+tags:
+  - name: 基础
+  - name: 登录
+  - name: 音乐
+  - name: 媒体
+paths:
+  /api/health:
+    get:
+      operationId: getWebHealth
+      summary: 检查 Web 服务
+      tags: [基础]
+      security: []
+      responses:
+        "200":
+          description: Web 服务可响应
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status: { const: ok }
+                  service: { const: web }
+              example: { status: ok, service: web }
+  /api/auth/providers:
+    get:
+      operationId: listAuthProviders
+      summary: 查看登录提供方
+      tags: [登录]
+      security: []
+      responses:
+        "200":
+          description: 以提供方 ID 为键的配置
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  required: [id, name, type, signinUrl, callbackUrl]
+                  properties:
+                    id: { type: string }
+                    name: { type: string }
+                    type: { type: string }
+                    signinUrl: { type: string }
+                    callbackUrl: { type: string }
+              example:
+                github:
+                  id: github
+                  name: GitHub
+                  type: oauth
+                  signinUrl: http://localhost:3000/api/auth/signin/github
+                  callbackUrl: http://localhost:3000/api/auth/callback/github
+        "503": { $ref: "#/components/responses/AuthUnavailable" }
+  /api/auth/csrf:
+    get:
+      operationId: getAuthCsrfToken
+      summary: 获取登录和退出所用的 CSRF 令牌
+      tags: [登录]
+      security: []
+      responses:
+        "200":
+          description: 返回令牌，并设置对应的 Cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [csrfToken]
+                properties:
+                  csrfToken: { type: string }
+              example: { csrfToken: example-token }
+        "503": { $ref: "#/components/responses/AuthUnavailable" }
+  /api/auth/signin/github:
+    post:
+      operationId: startGitHubSignIn
+      summary: 发起 GitHub 登录
+      tags: [登录]
+      security: [{ AuthCsrf: [] }]
+      requestBody: { $ref: "#/components/requestBodies/AuthForm" }
+      responses:
+        "200":
+          description: 表单提供 json=true 时返回授权跳转地址
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthRedirect" }
+              example: { url: "https://github.com/login/oauth/authorize?state=example-state" }
+        "302": { description: 跳转到 GitHub 或登录错误页 }
+        "503": { $ref: "#/components/responses/AuthUnavailable" }
+  /api/auth/callback/github:
+    get:
+      operationId: completeGitHubSignIn
+      summary: 接收 GitHub 授权回调
+      description: 由 GitHub 重定向浏览器，并由 NextAuth 验证 OAuth 状态。
+      tags: [登录]
+      security: []
+      parameters:
+        - name: code
+          in: query
+          description: 授权成功时返回的一次性授权码
+          schema: { type: string }
+          example: example-code
+        - name: state
+          in: query
+          description: OAuth 请求状态
+          schema: { type: string }
+          example: example-state
+        - name: error
+          in: query
+          description: 授权被拒绝或失败时返回
+          schema: { type: string }
+          example: access_denied
+      responses:
+        "302":
+          description: 成功时设置会话并跳转，失败时转到登录错误页
+          headers:
+            Location:
+              schema: { type: string }
+              example: /zh
+        "503": { $ref: "#/components/responses/AuthUnavailable" }
+  /api/auth/session:
+    get:
+      operationId: getAuthSession
+      summary: 查看当前站内会话
+      tags: [登录]
+      security: [{}, { SiteSession: [] }]
+      responses:
+        "200":
+          description: 返回会话状态。缺少 githubId 时没有有效站内身份。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  githubId: { type: string }
+                  sessionVersion: { type: integer }
+                  expires: { type: string, format: date-time }
+                  user:
+                    type: object
+                    properties:
+                      name: { type: [string, "null"] }
+                      email: { type: [string, "null"] }
+                      image: { type: [string, "null"] }
+              examples:
+                anonymous: { value: {} }
+                signedIn:
+                  value:
+                    githubId: "12345"
+                    sessionVersion: 0
+                    expires: "2026-12-10T12:00:00.000Z"
+                    user: { name: 示例用户 }
+        "503": { $ref: "#/components/responses/AuthUnavailable" }
+  /api/auth/signout:
+    post:
+      operationId: signOut
+      summary: 退出当前站内会话
+      tags: [登录]
+      security: [{ AuthCsrf: [] }]
+      requestBody: { $ref: "#/components/requestBodies/AuthForm" }
+      responses:
+        "200": { $ref: "#/components/responses/AuthRedirectJson" }
+        "302": { description: 返回退出后的跳转地址 }
+        "503": { $ref: "#/components/responses/AuthUnavailable" }
+  /api/music:
+    get:
+      operationId: getMusicResource
+      summary: 获取已入库曲目的歌词或音源
+      tags: [音乐]
+      security: []
+      parameters:
+        - name: kind
+          in: query
+          required: true
+          schema: { type: string, enum: [lyrics, stream] }
+          example: lyrics
+        - name: id
+          in: query
+          required: true
+          schema: { type: string, pattern: "^[1-9][0-9]{0,17}$" }
+          example: "12345"
+      responses:
+        "200":
+          description: 歌词无时间戳时 time 为 null，曲目不可播放时 url 为 null。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    required: [lines]
+                    properties:
+                      lines:
+                        type: array
+                        items:
+                          type: object
+                          required: [time, text]
+                          properties:
+                            time: { type: [number, "null"], description: 秒 }
+                            text: { type: string }
+                  - type: object
+                    required: [url]
+                    properties:
+                      url: { type: [string, "null"] }
+              examples:
+                lyrics: { value: { lines: [{ time: 12.5, text: 示例歌词 }] } }
+                unavailable: { value: { url: null } }
+        "400": { description: 参数无效，响应体为空 }
+        "404": { description: 曲目未入库，响应体为空 }
+        "502": { description: 查询失败，响应体为空 }
+        "503": { description: 网易云 API 未配置，响应体为空 }
+  /api/media:
+    post:
+      operationId: uploadImage
+      summary: 上传图片
+      description: 需要同源请求、上传权限及可用配额。
+      tags: [媒体]
+      security: [{ SiteSession: [] }]
+      requestBody:
+        required: true
+        content:
+          image/jpeg: { schema: { type: string, format: binary } }
+          image/png: { schema: { type: string, format: binary } }
+          image/webp: { schema: { type: string, format: binary } }
+      responses:
+        "201":
+          description: 图片保存成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url: { type: string }
+              example: { url: /api/media/00000000-0000-4000-8000-000000000001 }
+        "400": { $ref: "#/components/responses/InvalidImage" }
+        "401": { $ref: "#/components/responses/UploadAuthRequired" }
+        "403": { $ref: "#/components/responses/UploadForbidden" }
+        "409": { $ref: "#/components/responses/QuotaExceeded" }
+        "413": { $ref: "#/components/responses/ImageTooLarge" }
+        "500": { $ref: "#/components/responses/UploadFailed" }
+        "503": { $ref: "#/components/responses/StorageUnavailable" }
+        "507": { $ref: "#/components/responses/DiskFull" }
+  /api/media/{id}:
+    get:
+      operationId: getImage
+      summary: 读取站内图片
+      description: 已公开的图片允许匿名读取，未公开图片需为上传者或具备站主管理权限。
+      tags: [媒体]
+      security: [{}, { SiteSession: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          example: 00000000-0000-4000-8000-000000000001
+      responses:
+        "200":
+          description: WebP 图片
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        "404": { description: 图片不存在或当前请求无权读取，响应体为空 }
+components:
+  securitySchemes:
+    SiteSession:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: HTTPS 部署时使用带安全前缀的会话 Cookie。
+    AuthCsrf:
+      type: apiKey
+      in: cookie
+      name: next-auth.csrf-token
+      description: 与表单 csrfToken 配对。HTTPS 部署时使用带安全前缀的 Cookie。
+  schemas:
+    AuthRedirect:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+  requestBodies:
+    AuthForm:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            required: [csrfToken]
+            properties:
+              csrfToken: { type: string }
+              callbackUrl: { type: string, description: 返回的站内地址 }
+              json: { type: string, enum: ["true"] }
+          example: { csrfToken: example-token, callbackUrl: /zh, json: "true" }
+  responses:
+    AuthRedirectJson:
+      description: 表单提供 json=true 时返回浏览器跳转地址
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AuthRedirect" }
+          example: { url: "http://localhost:3000/zh" }
+    AuthUnavailable:
+      description: GitHub 登录未配置
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: GitHub 登录尚未配置 }
+    InvalidImage:
+      description: 图片为空或无效
+      content:
+        {
+          application/json:
+            { schema: { $ref: "#/components/schemas/Error" }, example: { error: invalidImage } },
+        }
+    UploadAuthRequired:
+      description: 未登录
+      content:
+        {
+          application/json:
+            { schema: { $ref: "#/components/schemas/Error" }, example: { error: loginRequired } },
+        }
+    UploadForbidden:
+      description: 上传权限不足或请求来源不符
+      content:
+        {
+          application/json:
+            {
+              schema: { $ref: "#/components/schemas/Error" },
+              example: { error: mediaUploadDenied },
+            },
+        }
+    QuotaExceeded:
+      description: 用户或站点图片配额不足
+      content:
+        {
+          application/json:
+            {
+              schema: { $ref: "#/components/schemas/Error" },
+              example: { error: userMediaQuotaExceeded },
+            },
+        }
+    ImageTooLarge:
+      description: 超出大小限制
+      content:
+        {
+          application/json:
+            { schema: { $ref: "#/components/schemas/Error" }, example: { error: imageTooLarge } },
+        }
+    UploadFailed:
+      description: 图片保存失败
+      content:
+        {
+          application/json:
+            {
+              schema: { $ref: "#/components/schemas/Error" },
+              example: { error: mediaUploadFailed },
+            },
+        }
+    StorageUnavailable:
+      description: 图片存储未配置
+      content:
+        {
+          application/json:
+            {
+              schema: { $ref: "#/components/schemas/Error" },
+              example: { error: mediaUnconfigured },
+            },
+        }
+    DiskFull:
+      description: 磁盘空间不足
+      content:
+        {
+          application/json:
+            { schema: { $ref: "#/components/schemas/Error" }, example: { error: mediaDiskFull } },
+        }

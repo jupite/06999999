@@ -12,6 +12,7 @@ __pycache__/
 apps/web/src/generated/
 apps/web/next-env.d.ts
 apps/web/prisma/migrations/
+doc/api/python.openapi.json
 pnpm-lock.yaml
 uv.lock
 **/AGENTS.md

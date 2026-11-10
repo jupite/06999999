@@ -854,6 +854,18 @@ p {
 .docs-table {
   overflow-x: auto;
 }
+.docs-api-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.openapi-reference {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: #fff;
+  color-scheme: light;
+}
 @media (max-width: 700px) {
   .docs-layout {
     grid-template-columns: minmax(0, 1fr);
