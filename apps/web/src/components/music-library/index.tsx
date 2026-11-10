@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { getMusicLyrics } from "@/api";
-import { MusicCard, useMusic } from "./music-provider";
+import { MusicCard, useMusic } from "../music-provider";
 import { useI18n } from "@/i18n/client";
 import type { LyricLine } from "@/music/lyrics";
 import type { MusicTrack } from "@/music/source";

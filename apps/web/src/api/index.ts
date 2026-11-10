@@ -1,2 +1,2 @@
-export { uploadImage } from "./media";
-export { getMusicLyrics, getMusicStream } from "./music";
+export * from "./media";
+export * from "./music";

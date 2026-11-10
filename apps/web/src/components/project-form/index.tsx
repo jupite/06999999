@@ -5,7 +5,7 @@ import { submitProjectAction } from "@/app/[lang]/projects/actions";
 import { useI18n, type Notice } from "@/i18n/client";
 import { uploadImage } from "@/api";
 import { maxProjectUrlLength } from "@/server/domain/project-sites";
-import { ArticleImage } from "./article-image";
+import { ArticleImage } from "../article-image";
 
 export function ProjectForm({
   submissionId,

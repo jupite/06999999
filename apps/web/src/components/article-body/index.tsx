@@ -1,7 +1,7 @@
 import { getI18n } from "@/i18n/server";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArticleImage } from "./article-image";
+import { ArticleImage } from "../article-image";
 export async function ArticleBody({ markdown }: { markdown: string }) {
   const { t } = await getI18n();
   return (

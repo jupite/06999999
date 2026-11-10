@@ -13,8 +13,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { saveDraftAction } from "@/app/[lang]/write/actions";
 import { submitArticleEditAction } from "@/app/[lang]/articles/actions";
-import { SubmitArticleButton } from "./article-controls";
-import { ArticleImage } from "./article-image";
+import { SubmitArticleButton } from "../article-controls";
+import { ArticleImage } from "../article-image";
 
 type Draft = {
   id?: string;

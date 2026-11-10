@@ -2,8 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon } from "lucide-react";
-import { AccountMenu } from "./account-menu";
-import { LanguageSwitcher } from "./language-switcher";
+import { AccountMenu } from "../account-menu";
+import { LanguageSwitcher } from "../language-switcher";
 import { useI18n } from "@/i18n/client";
 import { localePath } from "@/i18n/routing";
 const navigation = [
