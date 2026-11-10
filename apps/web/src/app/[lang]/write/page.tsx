@@ -1,8 +1,8 @@
 import { getI18n } from "@/i18n/server";
 import { LocaleLink } from "@/i18n/link";
-import { ArticleNavigation } from "@/components/article-shared";
+import { ArticleNavigation } from "@/components/server";
+import { MarkdownEditor } from "@/components";
 import { notFound } from "next/navigation";
-import { MarkdownEditor } from "@/components/markdown-editor";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { authorize } from "@/server/domain/permissions";

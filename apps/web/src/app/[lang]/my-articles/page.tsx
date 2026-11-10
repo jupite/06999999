@@ -10,13 +10,8 @@ import {
   articleFilters,
 } from "@/server/domain/articles";
 import { authorize } from "@/server/domain/permissions";
-import {
-  ArticlePagination,
-  ArticleAccessNotice,
-  ArticleNavigation,
-} from "@/components/article-shared";
-import { DeletePublishedArticleButton } from "@/components/article-controls";
-import { DeleteDraftButton } from "@/components/delete-draft-button";
+import { ArticlePagination, ArticleAccessNotice, ArticleNavigation } from "@/components/server";
+import { DeletePublishedArticleButton, DeleteDraftButton } from "@/components";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const { t } = await getI18n();

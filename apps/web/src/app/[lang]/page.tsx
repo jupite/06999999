@@ -1,7 +1,7 @@
 import { getI18n } from "@/i18n/server";
 import { LocaleLink } from "@/i18n/link";
 import { ArrowUpRight, BookOpen, Camera, Code2, Moon, Feather, Sparkles } from "lucide-react";
-import { MusicCard } from "@/components/music-provider";
+import { MusicCard } from "@/components";
 export default async function Home() {
   const { t } = await getI18n();
   return (

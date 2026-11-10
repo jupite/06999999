@@ -1,8 +1,7 @@
 import { getI18n } from "@/i18n/server";
-import { GitHubLogin } from "@/components/github-login";
+import { GitHubLogin, SignOutButton } from "@/components";
 import { authConfigured, currentActor } from "@/server/auth";
 import { authorize } from "@/server/domain/permissions";
-import { SignOutButton } from "@/components/account-menu";
 import { LocaleLink } from "@/i18n/link";
 import { Moon } from "lucide-react";
 export async function generateMetadata() {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/i18n/client";
+import { getMusicStream } from "@/api";
 import { LocaleLink } from "@/i18n/link";
 import { localePath } from "@/i18n/routing";
 import { musicSourceUrl, type MusicTrack } from "@/music/source";
@@ -100,11 +101,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     setError("");
     try {
       if (!element.hasAttribute("src") || element.error) {
-        const response = await fetch(`/api/music?kind=stream&id=${track.id}`, {
-          signal: controller.signal,
-        });
-        if (!response.ok) throw new Error("Stream lookup failed");
-        const { url }: { url: string | null } = await response.json();
+        const url = await getMusicStream(track.id, controller.signal);
         if (controller.signal.aborted) return;
         if (!url) {
           setError("trackUnavailable");

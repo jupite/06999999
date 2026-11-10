@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
-import { ArticlePagination } from "@/components/article-shared";
-import { ArticleImage } from "@/components/article-image";
+import { ArticlePagination } from "@/components/server";
+import { ArticleImage } from "@/components";
 import { LocaleLink } from "@/i18n/link";
 import { getI18n } from "@/i18n/server";
 import { imageUrl } from "@/media/urls";

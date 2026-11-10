@@ -3,9 +3,8 @@ import { LocaleLink } from "@/i18n/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/server/db";
 import { readPublishedArticle } from "@/server/services/articles";
-import { ArticleBody } from "@/components/article-body";
-import { ArticleTopics } from "@/components/article-topics";
-import { ArticleTime, ArticleNavigation } from "@/components/article-shared";
+import { ArticleBody, ArticleTime, ArticleNavigation } from "@/components/server";
+import { ArticleTopics } from "@/components";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { t } = await getI18n();

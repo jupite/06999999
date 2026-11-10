@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { LocaleLink } from "@/i18n/link";
-import { Navigation } from "@/components/navigation";
-import { MusicProvider } from "@/components/music-provider";
+import { Navigation, MusicProvider } from "@/components";
 import { authConfigured } from "@/server/auth";
 import { LocaleProvider } from "@/i18n/client";
 import { getI18n } from "@/i18n/server";

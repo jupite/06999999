@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
-import { MusicCard, useMusic } from "@/components/music-provider";
+import { getMusicLyrics } from "@/api";
+import { MusicCard, useMusic } from "./music-provider";
 import { useI18n } from "@/i18n/client";
 import type { LyricLine } from "@/music/lyrics";
 import type { MusicTrack } from "@/music/source";
@@ -55,17 +56,15 @@ function MusicLyrics({ id, time }: { id?: string; time: number }) {
   useEffect(() => {
     if (!id) return;
     const request = new AbortController();
-    async function loadLyrics() {
+    async function loadLyrics(trackId: string) {
       try {
-        const response = await fetch(`/api/music?kind=lyrics&id=${id}`, { signal: request.signal });
-        if (!response.ok) throw new Error("Lyrics unavailable");
-        const data: { lines: LyricLine[] } = await response.json();
-        if (!request.signal.aborted) setLines(data.lines);
+        const lyrics = await getMusicLyrics(trackId, request.signal);
+        if (!request.signal.aborted) setLines(lyrics);
       } catch {
         if (!request.signal.aborted) setFailed(true);
       }
     }
-    void loadLyrics();
+    void loadLyrics(id);
     return () => request.abort();
   }, [id]);
 

@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { notFound } from "next/navigation";
 import { documents } from "@/docs/catalog";
-import { DocMarkdown } from "@/components/doc-markdown";
+import { DocMarkdown } from "@/components/server";
 import { getI18n } from "@/i18n/server";
 
 type Props = { params: Promise<{ slug: string }> };

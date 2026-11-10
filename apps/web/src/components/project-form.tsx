@@ -3,7 +3,7 @@
 import { useActionState, useRef, useState } from "react";
 import { submitProjectAction } from "@/app/[lang]/projects/actions";
 import { useI18n, type Notice } from "@/i18n/client";
-import { uploadImage } from "@/media/upload";
+import { uploadImage } from "@/api";
 import { maxProjectUrlLength } from "@/server/domain/project-sites";
 import { ArticleImage } from "./article-image";
 

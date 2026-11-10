@@ -6,10 +6,8 @@ import { getDb } from "@/server/db";
 import { readMyArticle } from "@/server/services/articles";
 import { articleStateLabels } from "@/server/domain/articles";
 import { authorize } from "@/server/domain/permissions";
-import { ArticleBody } from "@/components/article-body";
-import { ArticleTopics } from "@/components/article-topics";
-import { ArticleAccessNotice, ArticleNavigation } from "@/components/article-shared";
-import { CopyRejectedButton } from "@/components/article-controls";
+import { ArticleBody, ArticleAccessNotice, ArticleNavigation } from "@/components/server";
+import { ArticleTopics, CopyRejectedButton } from "@/components";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const { t } = await getI18n();

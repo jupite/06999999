@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { ArticleAccessNotice } from "@/components/article-shared";
-import { ProjectForm } from "@/components/project-form";
+import { ArticleAccessNotice } from "@/components/server";
+import { ProjectForm } from "@/components";
 import { LocaleLink } from "@/i18n/link";
 import { getI18n } from "@/i18n/server";
 import { currentActor } from "@/server/auth";

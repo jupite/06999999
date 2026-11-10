@@ -5,10 +5,8 @@ import { currentActor } from "@/server/auth";
 import { authorize } from "@/server/domain/permissions";
 import { getDb } from "@/server/db";
 import { readPendingArticle } from "@/server/services/articles";
-import { ArticleAccessNotice } from "@/components/article-shared";
-import { ArticleBody } from "@/components/article-body";
-import { ArticleTopics } from "@/components/article-topics";
-import { ReviewArticleForm } from "@/components/article-controls";
+import { ArticleAccessNotice, ArticleBody } from "@/components/server";
+import { ArticleTopics, ReviewArticleForm } from "@/components";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const { t } = await getI18n();

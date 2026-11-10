@@ -1,4 +1,4 @@
-import { ArticleAccessNotice } from "@/components/article-shared";
+import { ArticleAccessNotice } from "@/components/server";
 import { LocaleLink } from "@/i18n/link";
 import { localePath } from "@/i18n/routing";
 import { getI18n } from "@/i18n/server";

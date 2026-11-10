@@ -1,5 +1,5 @@
 import type { SystemKey } from "@/i18n/messages";
-import { imageIdFromUrl } from "./urls";
+import { imageIdFromUrl } from "@/media/urls";
 
 export async function uploadImage(file: File) {
   const response = await fetch("/api/media", { method: "POST", body: file });

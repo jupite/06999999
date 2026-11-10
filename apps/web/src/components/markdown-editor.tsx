@@ -5,7 +5,7 @@ import { localePath } from "@/i18n/routing";
 import type { MessageKey } from "@/i18n/messages";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { imageUrl } from "@/media/urls";
-import { uploadImage } from "@/media/upload";
+import { uploadImage } from "@/api";
 import { maxTagTextLength } from "@/server/domain/article-taxonomy";
 import { LocaleLink } from "@/i18n/link";
 import { useRouter } from "next/navigation";

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArticleAccessNotice, ArticleTime } from "@/components/article-shared";
+import { ArticleAccessNotice, ArticleTime } from "@/components/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { LocaleLink } from "@/i18n/link";
 import { getI18n } from "@/i18n/server";

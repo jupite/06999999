@@ -5,8 +5,8 @@ import { getDb } from "@/server/db";
 import { listPublishedArticles, listPublishedTerms } from "@/server/services/public-articles";
 import { articlePage } from "@/server/domain/articles";
 import { taxonomyId } from "@/server/domain/article-taxonomy";
-import { ArticlePagination, ArticleTime, ArticleNavigation } from "@/components/article-shared";
-import { ArticleTopics } from "@/components/article-topics";
+import { ArticlePagination, ArticleTime, ArticleNavigation } from "@/components/server";
+import { ArticleTopics } from "@/components";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const { t } = await getI18n();

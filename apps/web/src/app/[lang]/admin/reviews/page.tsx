@@ -5,7 +5,7 @@ import { authorize } from "@/server/domain/permissions";
 import { getDb } from "@/server/db";
 import { listPendingArticles } from "@/server/services/articles";
 import { articlePage } from "@/server/domain/articles";
-import { ArticleAccessNotice, ArticlePagination } from "@/components/article-shared";
+import { ArticleAccessNotice, ArticlePagination } from "@/components/server";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const { t } = await getI18n();

@@ -1,4 +1,4 @@
-import { MusicLibrary } from "@/components/music-library";
+import { MusicLibrary } from "@/components";
 import { getI18n } from "@/i18n/server";
 import { getDb } from "@/server/db";
 import { listMusicLibrary } from "@/server/services/music-library";
