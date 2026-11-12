@@ -9,6 +9,7 @@ tags:
   - name: 基础
   - name: 登录
   - name: 音乐
+  - name: 评论
   - name: 点赞
   - name: 媒体
 paths:
@@ -478,6 +479,135 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
               example: { error: likeRequestFailed }
+  /api/articles/{slug}/comments:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        description: 公开文章的 slug
+        schema: { type: string, minLength: 1, maxLength: 200 }
+    get:
+      operationId: listArticleComments
+      summary: 查看文章公开评论
+      description: 只返回审核通过的评论，每页 20 条，按时间及 ID 倒序。无效页码使用第 1 页。
+      tags: [评论]
+      security: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema: { type: integer, minimum: 1, maximum: 100000, default: 1 }
+      responses:
+        "200":
+          description: 公开评论及分页状态
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentPage" }
+              example: { comments: [], more: false, page: 1 }
+        "404":
+          description: 文章不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeArticleMissing }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: commentRequestFailed }
+    post:
+      operationId: submitArticleComment
+      summary: 提交纯文本评论
+      description: 要求同源请求及 comment.submit 权限。站主评论直接公开，普通用户转人工审核。相同 ID 和内容重试不会重复创建；每账号每分钟最多 5 条。
+      tags: [评论]
+      security: [{ SiteSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, body]
+              properties:
+                id:
+                  {
+                    type: string,
+                    format: uuid,
+                    description: 客户端生成的 UUID v4，同一次提交重试时复用,
+                  }
+                body:
+                  {
+                    type: string,
+                    minLength: 1,
+                    maxLength: 2000,
+                    description: 去除首尾空白后校验，按纯文本显示,
+                  }
+            example: { id: "550e8400-e29b-41d4-a716-446655440000", body: "感谢分享" }
+      responses:
+        "200":
+          description: 已创建或复用的本人评论
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, state]
+                properties:
+                  id: { type: string }
+                  state:
+                    {
+                      type: string,
+                      description: 初次提交为 PUBLISHED 或 PENDING_HUMAN，重试返回当前审核状态,
+                    }
+              example: { id: "550e8400-e29b-41d4-a716-446655440000", state: PENDING_HUMAN }
+        "400":
+          description: 输入无效或 JSON 无效
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: invalidComment }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 权限不足或非同源请求
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: permissionDenied }
+        "404":
+          description: 文章不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeArticleMissing }
+        "409":
+          description: 提交标识与原记录不匹配
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: commentConflict }
+        "413":
+          description: 请求体超过 16 KiB
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: invalidComment }
+        "429":
+          description: 提交过于频繁
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: commentRateLimited }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: commentRequestFailed }
 components:
   securitySchemes:
     SiteSession:
@@ -491,6 +621,28 @@ components:
       name: next-auth.csrf-token
       description: 与表单 csrfToken 配对。HTTPS 部署时使用带安全前缀的 Cookie。
   schemas:
+    PublicComment:
+      type: object
+      required: [id, body, createdAt, author]
+      properties:
+        id: { type: string }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+        author:
+          type: object
+          required: [name]
+          properties:
+            name: { type: string }
+    CommentPage:
+      type: object
+      required: [comments, more, page]
+      properties:
+        comments:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PublicComment" }
+        more: { type: boolean }
+        page: { type: integer, minimum: 1 }
     ArticleLike:
       type: object
       required: [count, liked]

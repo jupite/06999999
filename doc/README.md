@@ -15,6 +15,7 @@
 
 - [GitHub 登录与会话](./github-login.md)说明登录和退出流程、站内身份、站主权限及验收步骤。
 - [文章草稿、发布与审核](./article-publishing.md)说明编辑、投稿、审核、分类标签及验证步骤。
+- [文章评论](./article-comments.md)说明纯文本评论、人工审核和提交限制。
 - [文章与项目点赞](./article-likes.md)说明点赞、取消和权限规则。
 - [文章图片上传](./article-images.md)说明上传权限、存储配置、配额与审核流程。
 - [项目卡片发布](./project-publishing.md)说明投稿、网址校验、审核和公开展示。

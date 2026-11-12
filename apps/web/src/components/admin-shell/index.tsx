@@ -40,6 +40,7 @@ const groups = [
   {
     label: "previewManagement",
     links: [
+      { href: "/admin/comment-reviews", label: "commentReviews", icon: ShieldCheck },
       { href: "/admin/reviews", label: "articleReview", icon: ShieldCheck },
       { href: "/admin/project-reviews", label: "projectReviews", icon: FolderKanban },
       { href: "/admin/audit", label: "auditTitle", icon: History },

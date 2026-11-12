@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { authorize, type Actor } from "../domain/permissions";
 
-export const auditGroups = ["user", "media", "music", "article", "project"] as const;
+export const auditGroups = ["user", "media", "music", "article", "project", "comment"] as const;
 export type AuditGroup = (typeof auditGroups)[number];
 export function isAuditGroup(value: unknown): value is AuditGroup {
   return auditGroups.some((group) => group === value);

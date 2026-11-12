@@ -47,13 +47,19 @@ export async function AdminOverview({
             <span>{t("previewPending")}</span>
             <ShieldCheck size={19} />
           </div>
-          <strong>{number.format(overview.pendingArticles + overview.pendingProjects)}</strong>
+          <strong>
+            {number.format(
+              overview.pendingArticles + overview.pendingProjects + overview.pendingComments,
+            )}
+          </strong>
           <p>
             {t("adminPendingBreakdown", {
               articles: overview.pendingArticles,
               projects: overview.pendingProjects,
+              comments: overview.pendingComments,
             })}
           </p>
+          <LocaleLink href="/admin/comment-reviews">{t("commentReviews")}</LocaleLink>
         </section>
         <section className={styles.stat}>
           <div>

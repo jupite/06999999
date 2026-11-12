@@ -24,6 +24,9 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
         AND r.version = c."publishedVersion" AND r.state = 'PUBLISHED'
       WHERE c.kind IN ('POST', 'PROJECT')
     `;
+      const pendingComments = await tx.comment.count({
+        where: { state: "PENDING_HUMAN", content: { kind: "POST" } },
+      });
       const users = await tx.user.count();
       const media = await tx.media.aggregate({ _sum: { bytes: true } });
       const settings = await tx.siteSettings.findUnique({
@@ -42,6 +45,7 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
       return {
         pendingArticles,
         pendingProjects,
+        pendingComments,
         published: Number(published.count),
         users,
         pending,

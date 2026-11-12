@@ -20,3 +20,5 @@ export { ProjectReviewForm } from "./project-review-form";
 
 export { PasswordLogin } from "./password-login";
 export { ArticleLike } from "./article-like";
+export { ArticleComments } from "./article-comments";
+export { CommentReviewForm } from "./comment-review-form";
