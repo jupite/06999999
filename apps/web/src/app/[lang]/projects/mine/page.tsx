@@ -1,3 +1,5 @@
+import { ContentWithdrawal } from "@/components";
+import { authorize } from "@/server/domain/permissions";
 import { ArticleAccessNotice, ArticlePagination } from "@/components/server";
 import { LocaleLink } from "@/i18n/link";
 import { getI18n } from "@/i18n/server";
@@ -46,6 +48,16 @@ export default async function OwnProjectsPage({
               <h2>{revision.title}</h2>
               <p>{t("statusLabel", { status: t(articleStateLabels[revision.state]) })}</p>
               <p className="project-summary">{revision.summary}</p>
+              {authorize(actor, "content.editOwn").allowed &&
+                (revision.state === "PENDING_HUMAN" || revision.state === "PUBLISHED") && (
+                  <ContentWithdrawal
+                    id={project.id}
+                    version={revision.version}
+                    kind="PROJECT"
+                    state={revision.state}
+                    title={revision.title}
+                  />
+                )}
               {revision.state === "REJECTED" && (
                 <p className="notice">
                   {t("rejectionReason", {

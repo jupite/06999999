@@ -19,8 +19,9 @@ export async function withdrawSubmissionAction(
   } catch (error) {
     return error instanceof WithdrawalError ? error.key : "withdrawalFailed";
   }
-  const section = kind === "PHOTO" ? "photos" : "friends";
-  const review = kind === "PHOTO" ? "photo-reviews" : "friend-reviews";
+  const section = kind === "PHOTO" ? "photos" : kind === "PROJECT" ? "projects" : "friends";
+  const review =
+    kind === "PHOTO" ? "photo-reviews" : kind === "PROJECT" ? "project-reviews" : "friend-reviews";
   for (const path of [
     `/[lang]/${section}`,
     `/[lang]/${section}/mine`,

@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { SystemKey } from "@/i18n/messages";
 import { accountActor, authorize, type Actor } from "../domain/permissions";
 import { lockUserAccount } from "./user-access";
-export type WithdrawableKind = "PHOTO" | "FRIEND_LINK";
+export type WithdrawableKind = "PHOTO" | "FRIEND_LINK" | "PROJECT";
 export type WithdrawableState = "PENDING_HUMAN" | "PUBLISHED";
 export class WithdrawalError extends Error {
   constructor(readonly key: SystemKey) {
@@ -26,7 +26,7 @@ export async function withdrawOwnSubmission(
     typeof version !== "number" ||
     !Number.isSafeInteger(version) ||
     version < 1 ||
-    (kind !== "PHOTO" && kind !== "FRIEND_LINK") ||
+    (kind !== "PHOTO" && kind !== "FRIEND_LINK" && kind !== "PROJECT") ||
     (state !== "PENDING_HUMAN" && state !== "PUBLISHED")
   )
     throw new WithdrawalError("withdrawalConflict");
@@ -83,7 +83,12 @@ export async function withdrawOwnSubmission(
   await db.auditLog.create({
     data: {
       actorId: actor.id,
-      action: kind === "PHOTO" ? "photo.withdraw" : "friend.withdraw",
+      action:
+        kind === "PHOTO"
+          ? "photo.withdraw"
+          : kind === "PROJECT"
+            ? "project.withdraw"
+            : "friend.withdraw",
       targetId: id,
       before: { version, state, publishedVersion: content.publishedVersion },
       after: { version, state: "WITHDRAWN", publishedVersion: null },

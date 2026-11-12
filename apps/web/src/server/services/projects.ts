@@ -140,6 +140,13 @@ export async function reviewProject(
   )
     throw new ProjectError("invalidProjectSubmission");
   const input = reviewInput(form.get("decision"), form.get("reason"));
+  // Serialize review and author withdrawal before locking the content/revision.
+  const submission = await tx.content.findFirst({
+    where: { id, kind: "PROJECT", currentVersion: version },
+    select: { authorId: true },
+  });
+  if (!submission) throw new ProjectError("projectReviewConflict");
+  await lockUserAccount(tx, submission.authorId);
   const claimed = await tx.content.updateMany({
     where: {
       id,
