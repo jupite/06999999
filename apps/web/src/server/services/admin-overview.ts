@@ -2,6 +2,7 @@ import "server-only";
 import type { PrismaClient } from "@/generated/prisma/client";
 import { authorize, type Actor } from "../domain/permissions";
 import { listPendingArticles } from "./articles";
+import { listPendingPhotos } from "./photos";
 import { listPendingProjects } from "./projects";
 
 export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
@@ -12,6 +13,10 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
     async (tx) => {
       const articles = await listPendingArticles(tx, actor);
       const projects = await listPendingProjects(tx, actor, 1);
+      const photos = await listPendingPhotos(tx, actor);
+      const pendingPhotos = await tx.content.count({
+        where: { kind: "PHOTO", revisions: { some: { state: "PENDING_HUMAN" } } },
+      });
       const pendingArticles = await tx.content.count({
         where: { kind: "POST", revisions: { some: { state: "PENDING_HUMAN" } } },
       });
@@ -22,7 +27,7 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
       SELECT COUNT(*) AS count FROM "Content" c
       JOIN "ContentRevision" r ON r."contentId" = c.id
         AND r.version = c."publishedVersion" AND r.state = 'PUBLISHED'
-      WHERE c.kind IN ('POST', 'PROJECT')
+      WHERE c.kind IN ('POST', 'PROJECT', 'PHOTO')
     `;
       const pendingComments = await tx.comment.count({
         where: { state: "PENDING_HUMAN", content: { kind: "POST" } },
@@ -33,7 +38,7 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
         where: { id: "site" },
         select: { totalMediaLimitBytes: true },
       });
-      const pending = [...articles, ...projects]
+      const pending = [...articles, ...projects, ...photos]
         .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime() || a.id.localeCompare(b.id))
         .slice(0, 6)
         .map((content) => ({
@@ -45,6 +50,7 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
       return {
         pendingArticles,
         pendingProjects,
+        pendingPhotos,
         pendingComments,
         published: Number(published.count),
         users,

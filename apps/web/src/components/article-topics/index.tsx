@@ -6,10 +6,12 @@ export function ArticleTopics({
   category,
   tags,
   publicLinks = false,
+  base = "/articles",
 }: {
   category: Term | null;
   tags: Term[];
   publicLinks?: boolean;
+  base?: "/articles" | "/photos";
 }) {
   const topics = [
     ...(category ? [{ kind: "category", ...category }] : []),
@@ -23,7 +25,7 @@ export function ArticleTopics({
         return (
           <li key={`${kind}:${id}`}>
             {publicLinks ? (
-              <LocaleLink className="pill" href={`/articles?${kind}=${encodeURIComponent(id)}`}>
+              <LocaleLink className="pill" href={`${base}?${kind}=${encodeURIComponent(id)}`}>
                 {label}
               </LocaleLink>
             ) : (

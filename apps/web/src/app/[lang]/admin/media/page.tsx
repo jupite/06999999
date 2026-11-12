@@ -44,7 +44,11 @@ export default async function MediaSettingsPage({
     });
   const mib = (value: bigint = 0n) => String(value / bytesPerMib);
   const effect = user?.permissions[0]?.effect;
-  const enabled = effect === "ALLOW" || (!effect && githubId === process.env.OWNER_GITHUB_ID);
+  const enabled =
+    effect === "ALLOW" ||
+    (!effect &&
+      (githubId === process.env.OWNER_GITHUB_ID ||
+        (user?.githubId.startsWith("local:") && user.role === "OWNER")));
   const result = query.result;
   const error =
     result === "invalidMediaQuota" ||

@@ -49,7 +49,10 @@ export async function AdminOverview({
           </div>
           <strong>
             {number.format(
-              overview.pendingArticles + overview.pendingProjects + overview.pendingComments,
+              overview.pendingArticles +
+                overview.pendingProjects +
+                overview.pendingPhotos +
+                overview.pendingComments,
             )}
           </strong>
           <p>
@@ -57,6 +60,7 @@ export async function AdminOverview({
               articles: overview.pendingArticles,
               projects: overview.pendingProjects,
               comments: overview.pendingComments,
+              photos: overview.pendingPhotos,
             })}
           </p>
           <LocaleLink href="/admin/comment-reviews">{t("commentReviews")}</LocaleLink>
@@ -118,13 +122,23 @@ export async function AdminOverview({
                         <span className={styles.rowIcon}>
                           {item.kind === "POST" ? (
                             <FileText size={18} />
+                          ) : item.kind === "PHOTO" ? (
+                            <Image size={18} />
                           ) : (
                             <FolderKanban size={18} />
                           )}
                         </span>
                         <span className={styles.pendingTitle}>
                           {item.title}
-                          <small>{t(item.kind === "POST" ? "articles" : "projects")}</small>
+                          <small>
+                            {t(
+                              item.kind === "POST"
+                                ? "articles"
+                                : item.kind === "PHOTO"
+                                  ? "photos"
+                                  : "projects",
+                            )}
+                          </small>
                         </span>
                       </td>
                       <td>{item.author}</td>
@@ -136,7 +150,9 @@ export async function AdminOverview({
                           href={
                             item.kind === "POST"
                               ? `/admin/reviews/${item.id}`
-                              : "/admin/project-reviews"
+                              : item.kind === "PHOTO"
+                                ? "/admin/photo-reviews"
+                                : "/admin/project-reviews"
                           }
                         >
                           {t("previewReview")}

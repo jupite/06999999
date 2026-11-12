@@ -32,6 +32,7 @@ const groups = [
     label: "previewContent",
     links: [
       { href: "/my-articles", label: "myArticles", icon: FileText },
+      { href: "/photos/mine", label: "myPhotos", icon: Image },
       { href: "/projects/mine", label: "myProjects", icon: FolderKanban },
       { href: "/admin/music", label: "manageMusic", icon: Music2 },
       { href: "/admin/categories", label: "manageCategories", icon: BookOpen },
@@ -40,6 +41,7 @@ const groups = [
   {
     label: "previewManagement",
     links: [
+      { href: "/admin/photo-reviews", label: "photoReviews", icon: ShieldCheck },
       { href: "/admin/comment-reviews", label: "commentReviews", icon: ShieldCheck },
       { href: "/admin/reviews", label: "articleReview", icon: ShieldCheck },
       { href: "/admin/project-reviews", label: "projectReviews", icon: FolderKanban },

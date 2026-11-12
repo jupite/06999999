@@ -5,7 +5,7 @@ import { authorize, type Actor } from "../domain/permissions";
 import { lockUserAccount } from "./user-access";
 
 export function isGithubId(value: unknown): value is string {
-  return typeof value === "string" && /^\d{1,20}$/.test(value);
+  return typeof value === "string" && /^(?:\d{1,20}|local:[A-Za-z0-9_-]{1,64})$/.test(value);
 }
 
 export async function saveMediaLimits(db: PrismaClient, actor: Actor, form: FormData) {

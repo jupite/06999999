@@ -22,3 +22,5 @@ export { PasswordLogin } from "./password-login";
 export { ArticleLike } from "./article-like";
 export { ArticleComments } from "./article-comments";
 export { CommentReviewForm } from "./comment-review-form";
+export { PhotoForm } from "./photo-form";
+export { PhotoReviewForm } from "./photo-review-form";

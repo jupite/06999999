@@ -1,12 +1,8 @@
 import { notFound } from "next/navigation";
 import { LocaleLink } from "@/i18n/link";
-import { Camera, Heart, Moon, Plus } from "lucide-react";
+import { Heart, Moon, Plus } from "lucide-react";
 import { getI18n } from "@/i18n/server";
 const sections = {
-  photos: {
-    en: "COLLECTING LITTLE MOMENTS",
-    icon: Camera,
-  },
   friends: {
     en: "OTHER LITTLE UNIVERSES",
     icon: Heart,
