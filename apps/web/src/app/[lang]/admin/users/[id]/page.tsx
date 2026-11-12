@@ -77,7 +77,11 @@ export default async function UserAccessPage({
       <LocaleLink href="/admin/users">{t("backToUsers")}</LocaleLink>
       <div className="page-heading">
         <h1>{user.name}</h1>
-        <p>{t("userGithubId", { id: user.githubId })}</p>
+        <p>
+          {t(user.githubId.startsWith("local:") ? "localAccountName" : "userGithubId", {
+            id: user.githubId.replace(/^local:/, ""),
+          })}
+        </p>
       </div>
       {result === "saved" && <p role="status">{t("userAccessSaved")}</p>}
       {error && (

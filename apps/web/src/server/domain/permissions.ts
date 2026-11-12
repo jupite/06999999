@@ -39,6 +39,7 @@ export function accountActor(
   user: {
     id: string;
     githubId: string;
+    role?: "OWNER" | "MEMBER";
     banned: boolean;
     permissions: { capability: string; effect: "ALLOW" | "DENY" }[];
   },
@@ -46,7 +47,11 @@ export function accountActor(
 ): Actor {
   return {
     id: user.id,
-    role: user.githubId === ownerGithubId ? "OWNER" : "MEMBER",
+    role:
+      user.githubId === ownerGithubId ||
+      (user.githubId.startsWith("local:") && user.role === "OWNER")
+        ? "OWNER"
+        : "MEMBER",
     banned: user.banned,
     overrides: Object.fromEntries(
       user.permissions.map(({ capability, effect }) => [capability, effect]),

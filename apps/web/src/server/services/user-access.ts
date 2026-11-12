@@ -124,7 +124,12 @@ export async function updateUserAccess(
     )
       throw new UserAccessError("invalidUserAccess");
     const banned = value === "banned";
-    if (banned && (id === manager.id || user.githubId === ownerGithubId))
+    if (
+      banned &&
+      (id === manager.id ||
+        user.githubId === ownerGithubId ||
+        (user.githubId.startsWith("local:") && user.role === "OWNER"))
+    )
       throw new UserAccessError("ownerAccountProtected");
     if ((expected === "banned") !== user.banned) throw new UserAccessError("userAccessConflict");
     if (banned === user.banned) return;

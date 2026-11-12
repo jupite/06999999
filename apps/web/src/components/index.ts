@@ -17,3 +17,5 @@ export { Navigation } from "./navigation";
 export { OpenApiReference } from "./openapi-reference";
 export { ProjectForm } from "./project-form";
 export { ProjectReviewForm } from "./project-review-form";
+
+export { PasswordLogin } from "./password-login";

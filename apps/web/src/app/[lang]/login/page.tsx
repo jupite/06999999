@@ -1,6 +1,6 @@
 import { getI18n } from "@/i18n/server";
-import { GitHubLogin, SignOutButton } from "@/components";
-import { authConfigured, currentActor } from "@/server/auth";
+import { GitHubLogin, PasswordLogin, SignOutButton } from "@/components";
+import { githubConfigured, passwordConfigured, currentActor } from "@/server/auth";
 import { authorize } from "@/server/domain/permissions";
 import { LocaleLink } from "@/i18n/link";
 import { Moon } from "lucide-react";
@@ -16,7 +16,7 @@ export default async function LoginPage({
 }) {
   const { t } = await getI18n();
   const { error } = await searchParams;
-  const configured = authConfigured();
+  const configured = githubConfigured() || passwordConfigured();
   const actor = await currentActor();
   if (actor) {
     const canManage = authorize(actor, "site.manage").allowed;
@@ -50,7 +50,8 @@ export default async function LoginPage({
       <span className="eyebrow">WELCOME TO OUR LITTLE WORLD</span>
       <h1>{t("loginHeading")}</h1>
       <p>{t("loginDescription")}</p>
-      <GitHubLogin configured={configured} />
+      {passwordConfigured() && <PasswordLogin />}
+      {githubConfigured() && <GitHubLogin configured />}
       {!configured && <p className="notice">{t("loginUnconfigured")}</p>}
       {error && (
         <p className="notice" role="alert">

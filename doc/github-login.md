@@ -1,5 +1,7 @@
 # GitHub 登录与会话
 
+另支持[预设账号密码登录](./password-login.md)，两种入口共用站内会话。
+
 ## 用户入口
 
 - 访客从顶部「登录」进入 `/zh/login` 或 `/en/login`，点击「使用 GitHub 登录」。GitHub 处理账号登录和授权，网站接收授权结果。

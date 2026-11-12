@@ -132,7 +132,12 @@ export default async function UsersPage({
                   <tr key={user.id}>
                     <td>
                       <span className={styles.pendingTitle}>{user.name}</span>
-                      <small>{t("userGithubId", { id: user.githubId })}</small>
+                      <small>
+                        {t(
+                          user.githubId.startsWith("local:") ? "localAccountName" : "userGithubId",
+                          { id: user.githubId.replace(/^local:/, "") },
+                        )}
+                      </small>
                     </td>
                     <td>{t(user.banned ? "bannedUser" : "activeUser")}</td>
                     <td>
