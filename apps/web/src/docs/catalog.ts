@@ -1,4 +1,5 @@
 export const functionDocs = [
+  { slug: "feature-controls", file: "feature-controls.md", title: "featureSettings" },
   { slug: "friend-links", file: "friend-links.md", title: "friends" },
   { slug: "photo-publishing", file: "photo-publishing.md", title: "photos" },
   { slug: "article-comments", file: "article-comments.md", title: "articleComments" },

@@ -20,6 +20,7 @@ const labels = {
   comment: "commentReviews",
   photo: "photoReviews",
   friend: "friendReviews",
+  feature: "featureSettings",
 } as const;
 export default async function AuditPage({
   searchParams,

@@ -1,7 +1,8 @@
+import { resolveAccountActor } from "../access";
 import "server-only";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import type { SystemKey } from "@/i18n/messages";
-import { accountActor, authorize, type Actor } from "../domain/permissions";
+import { authorize, type Actor } from "../domain/permissions";
 import { lockUserAccount } from "./user-access";
 
 export class LikeError extends Error {
@@ -56,7 +57,10 @@ export async function setContentLike(
       include: { permissions: true },
     });
     if (!user) throw new LikeError("loginRequired", 401);
-    const access = authorize(accountActor(user, process.env.OWNER_GITHUB_ID), "like.toggle");
+    const access = authorize(
+      await resolveAccountActor(tx, user, process.env.OWNER_GITHUB_ID),
+      "like.toggle",
+    );
     if (!access.allowed) throw new LikeError(access.reason, 403);
     const contentId = await publication(tx, reference, true, kind);
     if (liked)

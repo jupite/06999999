@@ -1,7 +1,8 @@
+import { resolveAccountActor } from "../access";
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import type { Actor } from "../domain/permissions";
-import { accountActor, authorize } from "../domain/permissions";
+import { authorize } from "../domain/permissions";
 import { ArticleError, reviewInput } from "../domain/articles";
 import type { SystemKey } from "@/i18n/messages";
 import { lockUserAccount } from "./user-access";
@@ -56,7 +57,7 @@ export async function submitArticleComment(
     include: { permissions: true },
   });
   if (!user) throw new CommentError("loginRequired", 401);
-  const current = accountActor(user, process.env.OWNER_GITHUB_ID);
+  const current = await resolveAccountActor(db, user, process.env.OWNER_GITHUB_ID);
   const access = authorize(current, "comment.submit");
   if (!access.allowed) throw new CommentError(access.reason, 403);
   const contentId = await publishedArticle(db, slug, true);
@@ -139,7 +140,7 @@ export async function reviewArticleComment(
       include: { permissions: true },
     });
     const authorAccess = authorize(
-      accountActor(author, process.env.OWNER_GITHUB_ID),
+      await resolveAccountActor(db, author, process.env.OWNER_GITHUB_ID),
       "comment.submit",
     );
     if (!authorAccess.allowed) throw new CommentError(authorAccess.reason, 403);

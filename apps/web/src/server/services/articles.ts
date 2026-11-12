@@ -1,6 +1,7 @@
+import { resolveAccountActor, refreshActorFeatures } from "../access";
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { accountActor, authorize, type Actor } from "../domain/permissions";
+import { authorize, type Actor } from "../domain/permissions";
 import { parseDraft } from "../domain/drafts";
 import {
   ArticleError,
@@ -30,6 +31,7 @@ export async function submitArticle(
   rawId: unknown,
   rawVersion: unknown,
 ) {
+  actor = await refreshActorFeatures(db, actor);
   const author = requireActor(actor);
   const { id, version } = articleReference(rawId, rawVersion);
   const claimed = await db.content.updateMany({
@@ -83,6 +85,7 @@ export async function submitArticle(
 }
 
 export async function submitArticleEdit(db: Db, actor: Actor | null, value: unknown) {
+  actor = await refreshActorFeatures(db, actor);
   const author = requireActor(actor);
   const access = authorize(author, "content.editOwn");
   if (!access.allowed) throw new ArticleError(access.reason);
@@ -179,7 +182,7 @@ export async function reviewArticle(
       where: { id: content.authorId },
       include: { permissions: true },
     });
-    const access = authorize(accountActor(author, undefined), "post.submit");
+    const access = authorize(await resolveAccountActor(db, author, undefined), "post.submit");
     if (!access.allowed)
       throw new ArticleError({ key: "authorCannotPublish", reason: access.reason });
   }
@@ -217,6 +220,7 @@ export async function copyRejectedArticle(
   rawId: unknown,
   rawVersion: unknown,
 ) {
+  actor = await refreshActorFeatures(db, actor);
   const author = requireActor(actor);
   const edit = authorize(author, "content.editOwn");
   if (!edit.allowed) throw new ArticleError(edit.reason);
@@ -329,6 +333,7 @@ export async function deletePublishedArticle(
   rawId: unknown,
   rawVersion: unknown,
 ) {
+  actor = await refreshActorFeatures(db, actor);
   const author = requireReader(actor);
   const access = authorize(author, "content.editOwn");
   if (!access.allowed) throw new ArticleError(access.reason);

@@ -15,15 +15,17 @@ export async function articleLike(
   if (!response.ok)
     return {
       error:
-        response.status === 401
-          ? "loginRequired"
-          : response.status === 403
-            ? "permissionDenied"
-            : response.status === 404
-              ? content === "articles"
-                ? "likeArticleMissing"
-                : "likeProjectMissing"
-              : "likeRequestFailed",
+        result.error === "featureDisabled"
+          ? "featureDisabled"
+          : response.status === 401
+            ? "loginRequired"
+            : response.status === 403
+              ? "permissionDenied"
+              : response.status === 404
+                ? content === "articles"
+                  ? "likeArticleMissing"
+                  : "likeProjectMissing"
+                : "likeRequestFailed",
     };
   if (!Number.isSafeInteger(result.count) || result.count < 0 || typeof result.liked !== "boolean")
     throw Error("Invalid like response");

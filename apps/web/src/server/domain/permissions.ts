@@ -33,6 +33,7 @@ export type Actor = {
   role: "OWNER" | "MEMBER";
   banned: boolean;
   overrides: Partial<Record<Capability, "ALLOW" | "DENY">>;
+  features?: Partial<Record<Capability, boolean>>;
 };
 
 export function accountActor(
@@ -73,6 +74,8 @@ export function authorize(
   if (!actor) return { allowed: false, reason: "loginRequired" };
   if (actor.banned) return { allowed: false, reason: "accountBanned" };
   if (!capabilities.includes(capability)) return { allowed: false, reason: "permissionDenied" };
+  if (capability !== "site.manage" && actor.features?.[capability] === false)
+    return { allowed: false, reason: "featureDisabled" };
   if (actor.overrides[capability] === "DENY") return { allowed: false, reason: "permissionDenied" };
   if (capability === "site.manage" && actor.role !== "OWNER")
     return { allowed: false, reason: "ownerOnly" };

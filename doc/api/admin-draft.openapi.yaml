@@ -2,64 +2,13 @@ openapi: 3.1.0
 info:
   title: 后台权限接口草案
   version: 0.1.0
-  description: 设计中。操作需要站主的 site.manage 权限，每个用户暂按一个自定义角色设计。
+  description: 角色及个人授权设计中。操作需要站主的 site.manage 权限，每个用户暂按一个自定义角色设计。全站功能开关已实现，见 Web 接口。
 servers:
   - url: /
 tags:
-  - name: 功能开关
   - name: 角色
   - name: 用户授权
 paths:
-  /api/admin/features:
-    get:
-      operationId: listFeatures
-      summary: 查看全站功能开关
-      tags: [功能开关]
-      security: [{ SiteSession: [] }]
-      responses:
-        "200":
-          description: 开关列表
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [features]
-                properties:
-                  features:
-                    type: array
-                    items: { $ref: "#/components/schemas/Feature" }
-              example: { features: [{ key: project.submit, enabled: true }] }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-  /api/admin/features/{key}:
-    parameters:
-      - $ref: "#/components/parameters/CapabilityKey"
-    patch:
-      operationId: updateFeature
-      summary: 更新全站功能开关
-      tags: [功能开关]
-      security: [{ SiteSession: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [enabled]
-              properties:
-                enabled: { type: boolean }
-            example: { enabled: false }
-      responses:
-        "200":
-          description: 更新后的开关
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Feature" }
-              example: { key: project.submit, enabled: false }
-        "400": { $ref: "#/components/responses/InvalidRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
   /api/admin/roles:
     get:
       operationId: listRoles
@@ -286,12 +235,6 @@ components:
     Mode:
       type: string
       enum: [inherit, allow, deny]
-    Feature:
-      type: object
-      required: [key, enabled]
-      properties:
-        key: { type: string }
-        enabled: { type: boolean }
     RoleRules:
       type: object
       additionalProperties: { $ref: "#/components/schemas/Mode" }

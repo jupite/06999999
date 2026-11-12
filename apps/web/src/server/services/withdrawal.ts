@@ -1,7 +1,8 @@
+import { resolveAccountActor } from "../access";
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import type { SystemKey } from "@/i18n/messages";
-import { accountActor, authorize, type Actor } from "../domain/permissions";
+import { authorize, type Actor } from "../domain/permissions";
 import { lockUserAccount } from "./user-access";
 export type WithdrawableKind = "PHOTO" | "FRIEND_LINK" | "PROJECT";
 export type WithdrawableState = "PENDING_HUMAN" | "PUBLISHED";
@@ -36,7 +37,10 @@ export async function withdrawOwnSubmission(
     include: { permissions: true },
   });
   if (!user) throw new WithdrawalError("loginRequired");
-  const access = authorize(accountActor(user, process.env.OWNER_GITHUB_ID), "content.editOwn");
+  const access = authorize(
+    await resolveAccountActor(db, user, process.env.OWNER_GITHUB_ID),
+    "content.editOwn",
+  );
   if (!access.allowed) throw new WithdrawalError(access.reason);
   const content = await db.content.findFirst({
     where: { id, kind, authorId: actor.id, currentVersion: version },

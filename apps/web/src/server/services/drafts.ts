@@ -1,3 +1,4 @@
+import { refreshActorFeatures } from "../access";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
@@ -48,6 +49,7 @@ export async function readDraft(db: Db, actor: Actor, id: string) {
 }
 // Call inside a transaction so the version increment and revision are atomic.
 export async function saveDraft(db: Db, actor: Actor | null, value: unknown) {
+  actor = await refreshActorFeatures(db, actor);
   const input = parseDraft(value);
   const author = requireDraftActor(actor, !!input.id);
   const media = await articleMedia(db, author.id, input.markdown);
@@ -87,6 +89,7 @@ export async function saveDraft(db: Db, actor: Actor | null, value: unknown) {
   return { ...input, ...fields, id: input.id, version: input.version + 1 };
 }
 export async function deleteDraft(db: Db, actor: Actor | null, id: unknown, version: unknown) {
+  actor = await refreshActorFeatures(db, actor);
   const author = requireDraftActor(actor, true);
   if (
     typeof id !== "string" ||

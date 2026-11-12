@@ -1,8 +1,9 @@
+import { resolveAccountActor } from "../access";
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import type { SystemKey } from "@/i18n/messages";
 import { imageIdFromUrl } from "@/media/urls";
-import { accountActor, authorize, type Actor } from "../domain/permissions";
+import { authorize, type Actor } from "../domain/permissions";
 import { parseProjectUrl } from "../domain/project-sites";
 import { reviewInput } from "../domain/articles";
 import { lockUserAccount } from "./user-access";
@@ -20,7 +21,7 @@ function requireActor(actor: Actor | null, manage = false) {
 async function authorActor(db: Db, id: string) {
   await lockUserAccount(db, id);
   const user = await db.user.findUniqueOrThrow({ where: { id }, include: { permissions: true } });
-  return requireActor(accountActor(user, process.env.OWNER_GITHUB_ID));
+  return requireActor(await resolveAccountActor(db, user, process.env.OWNER_GITHUB_ID));
 }
 async function requireIcon(db: Db, actor: Actor, mediaId: string) {
   const access = authorize(actor, "image.upload");

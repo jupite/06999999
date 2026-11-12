@@ -5,7 +5,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import { verifyPassword } from "./domain/password";
 import { getDb } from "./db";
-import { accountActor, hasCurrentSession, type Actor } from "./domain/permissions";
+import { resolveAccountActor } from "./access";
+import { hasCurrentSession, type Actor } from "./domain/permissions";
 config({ path: ".env.admin.local", quiet: true });
 export function authConfigured() {
   return Boolean(process.env.NEXTAUTH_SECRET && process.env.DATABASE_URL);
@@ -112,5 +113,5 @@ export async function currentActor(): Promise<Actor | null> {
     include: { permissions: true },
   });
   if (!user || !hasCurrentSession(user, session.sessionVersion)) return null;
-  return accountActor(user, process.env.OWNER_GITHUB_ID);
+  return resolveAccountActor(getDb(), user, process.env.OWNER_GITHUB_ID);
 }

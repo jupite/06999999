@@ -1,3 +1,4 @@
+import { loadFeatureFlags } from "../access";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { mkdir, open, readFile, statfs, unlink } from "node:fs/promises";
@@ -118,6 +119,7 @@ export async function storeImage(
         user
           ? {
               ...uploader,
+              features: await loadFeatureFlags(tx),
               banned: user.banned,
               overrides: { "image.upload": user.permissions[0]?.effect },
             }

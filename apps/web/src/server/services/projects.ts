@@ -1,9 +1,10 @@
+import { resolveAccountActor } from "../access";
 import "server-only";
 import type { SystemNotice } from "@/i18n/system-messages";
 import { Prisma } from "@/generated/prisma/client";
 import { imageIdFromUrl } from "@/media/urls";
 import { reviewInput } from "../domain/articles";
-import { accountActor, authorize, type Actor } from "../domain/permissions";
+import { authorize, type Actor } from "../domain/permissions";
 import { parseProjectUrl } from "../domain/project-sites";
 import { checkProjectWebsite } from "./project-sites";
 import { lockUserAccount } from "./user-access";
@@ -29,7 +30,9 @@ function requireProjectActor(actor: Actor | null, capability: "project.submit" |
 async function lockedAuthor(tx: Db, id: string, owner = false) {
   await lockUserAccount(tx, id);
   const user = await tx.user.findUnique({ where: { id }, include: { permissions: true } });
-  return user ? accountActor(user, owner ? user.githubId : process.env.OWNER_GITHUB_ID) : null;
+  return user
+    ? await resolveAccountActor(tx, user, owner ? user.githubId : process.env.OWNER_GITHUB_ID)
+    : null;
 }
 
 async function requireAllowedWebsite(tx: Db, url: string | null) {

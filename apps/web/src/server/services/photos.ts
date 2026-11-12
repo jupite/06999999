@@ -1,8 +1,9 @@
+import { resolveAccountActor } from "../access";
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import type { SystemKey } from "@/i18n/messages";
 import { imageIdFromUrl } from "@/media/urls";
-import { accountActor, authorize, type Actor } from "../domain/permissions";
+import { authorize, type Actor } from "../domain/permissions";
 import { parseDraft } from "../domain/drafts";
 import { reviewInput } from "../domain/articles";
 import { resolveArticleTaxonomy, articleTaxonomy } from "./article-taxonomy";
@@ -21,7 +22,7 @@ function requireActor(actor: Actor | null, manage = false) {
 async function currentAuthor(db: Db, id: string) {
   await lockUserAccount(db, id);
   const user = await db.user.findUniqueOrThrow({ where: { id }, include: { permissions: true } });
-  const actor = accountActor(user, process.env.OWNER_GITHUB_ID);
+  const actor = await resolveAccountActor(db, user, process.env.OWNER_GITHUB_ID);
   requireActor(actor);
   const upload = authorize(actor, "image.upload");
   if (!upload.allowed) throw new PhotoError(upload.reason);

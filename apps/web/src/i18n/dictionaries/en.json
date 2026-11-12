@@ -1,5 +1,11 @@
 {
   "messages": {
+    "featureSettings": "Site feature controls",
+    "featureSettingsHelp": "Disabling pauses this action for every account, including the owner. Personal grants cannot override it. Published content and administration remain available. Music imports are not included yet.",
+    "featureStatus": "Site status",
+    "featureOn": "Enabled",
+    "featureOff": "Disabled",
+    "featureSaved": "Saved",
     "withdrawSubmission": "Withdraw submission",
     "unpublishSubmission": "Unpublish",
     "withdrawalConfirmTitle": "Confirm withdrawal",
@@ -535,6 +541,11 @@
     "authorCannotPublish": "The author cannot publish right now. {reason} You can reject this submission and explain why."
   },
   "system": {
+    "featureUnknown": "This feature cannot be configured.",
+    "featureInvalid": "Invalid feature settings.",
+    "featureConflict": "The feature was changed elsewhere. Review the refreshed state and try again.",
+    "featureRequestFailed": "Feature settings are temporarily unavailable. Try again later.",
+    "featureDisabled": "This feature is currently disabled by the site owner.",
     "withdrawalConflict": "Content changed, was already handled, or belongs to another account. Refresh the page.",
     "withdrawalConfirmationRequired": "Confirm the withdrawal first.",
     "withdrawalFailed": "Withdrawal failed. Try again later.",

@@ -1,3 +1,4 @@
+import { resolveAccountActor } from "@/server/access";
 import { notFound } from "next/navigation";
 import { ArticleAccessNotice, ArticleTime } from "@/components/server";
 import type { Prisma } from "@/generated/prisma/client";
@@ -6,7 +7,6 @@ import { getI18n } from "@/i18n/server";
 import { currentActor } from "@/server/auth";
 import { getDb } from "@/server/db";
 import {
-  accountActor,
   authorize,
   editableCapabilities,
   isEditableCapability,
@@ -43,7 +43,7 @@ export default async function UserAccessPage({
   if (!data) notFound();
   const { user, audit, operators } = data;
   const ownerGithubId = process.env.OWNER_GITHUB_ID;
-  const account = accountActor(user, ownerGithubId);
+  const account = await resolveAccountActor(getDb(), user, ownerGithubId);
   const action = saveUserAccess.bind(null, locale, id);
   const bytes = new Intl.NumberFormat(locale, { style: "unit", unit: "byte" });
   const used = user.quota?.usedBytes ?? 0n;

@@ -192,3 +192,9 @@ model AuditLog {
   createdAt DateTime @default(now())
   @@index([targetId, createdAt])
 }
+
+model FeatureFlag {
+  key String @id
+  enabled Boolean @default(true)
+  updatedAt DateTime @updatedAt
+}

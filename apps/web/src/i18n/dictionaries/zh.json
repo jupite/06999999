@@ -1,5 +1,11 @@
 {
   "messages": {
+    "featureSettings": "全站功能开关",
+    "featureSettingsHelp": "关闭后，所有账号（含站主）的对应操作都会暂停，个人允许不能绕过。公开内容继续展示，后台管理不受影响。音乐导入暂不纳入开关。",
+    "featureStatus": "全站状态",
+    "featureOn": "已开启",
+    "featureOff": "已关闭",
+    "featureSaved": "已保存",
     "withdrawSubmission": "撤回投稿",
     "unpublishSubmission": "撤下内容",
     "withdrawalConfirmTitle": "确认撤回或撤下",
@@ -535,6 +541,11 @@
     "authorCannotPublish": "作者当前不能发布：{reason}。可填写原因拒绝该投稿。"
   },
   "system": {
+    "featureUnknown": "该功能不支持配置开关。",
+    "featureInvalid": "开关参数无效。",
+    "featureConflict": "开关已被其他操作修改，已刷新，请确认后重试。",
+    "featureRequestFailed": "功能开关暂时无法保存，请稍后重试。",
+    "featureDisabled": "该功能已被站主暂停。",
     "withdrawalConflict": "内容已变化、已被处理或不属于当前账号，请刷新。",
     "withdrawalConfirmationRequired": "请先确认撤回或撤下操作。",
     "withdrawalFailed": "撤回或撤下失败，请稍后重试。",

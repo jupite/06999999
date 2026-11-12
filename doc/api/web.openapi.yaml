@@ -9,6 +9,7 @@ tags:
   - name: 基础
   - name: 登录
   - name: 音乐
+  - name: 功能开关
   - name: 评论
   - name: 点赞
   - name: 媒体
@@ -608,6 +609,117 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
               example: { error: commentRequestFailed }
+  /api/admin/features:
+    get:
+      operationId: listFeatures
+      summary: 查看全站功能开关
+      description: 仅站主可读，未设置的开关默认开启。开启不替代角色或个人授权。
+      tags: [功能开关]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200":
+          description: 可管理的八项开关
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [features]
+                properties:
+                  features:
+                    type: array
+                    items: { $ref: "#/components/schemas/SiteFeature" }
+              example: { features: [{ key: post.submit, enabled: true }] }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 非站主
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: ownerOnly }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: featureRequestFailed }
+  /api/admin/features/{key}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        description: 受控能力标识，不包含 site.manage 和 music.submit
+        schema: { $ref: "#/components/schemas/FeatureKey" }
+    patch:
+      operationId: updateFeature
+      summary: 更新全站功能开关
+      description: 仅站主、同源请求。expectedEnabled 为页面读到的原值，不匹配时返回 409，防止旧页面覆盖。关闭优先于个人授权和站主业务操作，不影响公开内容与管理入口。
+      tags: [功能开关]
+      security: [{ SiteSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled, expectedEnabled]
+              properties:
+                enabled: { type: boolean }
+                expectedEnabled: { type: boolean }
+            example: { enabled: false, expectedEnabled: true }
+      responses:
+        "200":
+          description: 更新后的开关（相同值不重复审计）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SiteFeature" }
+              example: { key: post.submit, enabled: false }
+        "400":
+          description: 参数或 JSON 无效
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: featureInvalid }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 非站主或跨站请求
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: ownerOnly }
+        "404":
+          description: 不支持的能力
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: featureUnknown }
+        "409":
+          description: 原值与当前值不一致
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: featureConflict }
+        "413":
+          description: 请求体超过 2 KiB
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: featureInvalid }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: featureRequestFailed }
 components:
   securitySchemes:
     SiteSession:
@@ -621,6 +733,25 @@ components:
       name: next-auth.csrf-token
       description: 与表单 csrfToken 配对。HTTPS 部署时使用带安全前缀的 Cookie。
   schemas:
+    FeatureKey:
+      type: string
+      enum:
+        [
+          post.submit,
+          project.submit,
+          photo.submit,
+          friend.submit,
+          comment.submit,
+          image.upload,
+          like.toggle,
+          content.editOwn,
+        ]
+    SiteFeature:
+      type: object
+      required: [key, enabled]
+      properties:
+        key: { $ref: "#/components/schemas/FeatureKey" }
+        enabled: { type: boolean }
     PublicComment:
       type: object
       required: [id, body, createdAt, author]
