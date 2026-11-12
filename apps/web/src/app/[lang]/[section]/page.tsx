@@ -1,12 +1,7 @@
 import { notFound } from "next/navigation";
-import { LocaleLink } from "@/i18n/link";
-import { Heart, Moon, Plus } from "lucide-react";
+import { Moon } from "lucide-react";
 import { getI18n } from "@/i18n/server";
 const sections = {
-  friends: {
-    en: "OTHER LITTLE UNIVERSES",
-    icon: Heart,
-  },
   about: {
     en: "BEHIND THIS LITTLE WORLD",
     icon: Moon,
@@ -42,12 +37,6 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
         </div>
         <h2>{t(`${section}Empty`)}</h2>
         <p>{t(`${section}Detail`)}</p>
-        {section !== "about" && (
-          <LocaleLink className="button secondary" href="/login">
-            <Plus size={16} />
-            {t("signInDetails")}
-          </LocaleLink>
-        )}
         <span className="empty-footnote">{t("sectionPreview")}</span>
       </section>
     </>

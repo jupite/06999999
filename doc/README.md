@@ -18,6 +18,7 @@
 - [文章评论](./article-comments.md)说明纯文本评论、人工审核和提交限制。
 - [文章与项目点赞](./article-likes.md)说明点赞、取消和权限规则。
 - [文章图片上传](./article-images.md)说明上传权限、存储配置、配额与审核流程。
+- [友链投稿](./friend-links.md)说明友链申请、图标及后台审核。
 - [照片墙投稿](./photo-publishing.md)说明单张上传、分类标签、审核及图片可见性。
 - [项目卡片发布](./project-publishing.md)说明投稿、网址校验、审核和公开展示。
 - [后台操作记录](./admin-audit.md)说明审计查询、筛选和权限。

@@ -19,6 +19,7 @@ const labels = {
   project: "auditProjects",
   comment: "commentReviews",
   photo: "photoReviews",
+  friend: "friendReviews",
 } as const;
 export default async function AuditPage({
   searchParams,

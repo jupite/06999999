@@ -24,3 +24,5 @@ export { ArticleComments } from "./article-comments";
 export { CommentReviewForm } from "./comment-review-form";
 export { PhotoForm } from "./photo-form";
 export { PhotoReviewForm } from "./photo-review-form";
+export { FriendForm } from "./friend-form";
+export { FriendReviewForm } from "./friend-review-form";

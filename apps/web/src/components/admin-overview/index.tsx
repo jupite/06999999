@@ -4,6 +4,7 @@ import {
   FileText,
   FolderKanban,
   Image,
+  Heart,
   Music2,
   ShieldCheck,
   Users,
@@ -52,6 +53,7 @@ export async function AdminOverview({
               overview.pendingArticles +
                 overview.pendingProjects +
                 overview.pendingPhotos +
+                overview.pendingFriends +
                 overview.pendingComments,
             )}
           </strong>
@@ -61,6 +63,7 @@ export async function AdminOverview({
               projects: overview.pendingProjects,
               comments: overview.pendingComments,
               photos: overview.pendingPhotos,
+              friends: overview.pendingFriends,
             })}
           </p>
           <LocaleLink href="/admin/comment-reviews">{t("commentReviews")}</LocaleLink>
@@ -71,7 +74,7 @@ export async function AdminOverview({
             <FileText size={19} />
           </div>
           <strong>{number.format(overview.published)}</strong>
-          <p>{t("previewPublishedHelp")}</p>
+          <p>{t("adminPublishedHelp")}</p>
         </section>
         <section className={styles.stat}>
           <div>
@@ -124,6 +127,8 @@ export async function AdminOverview({
                             <FileText size={18} />
                           ) : item.kind === "PHOTO" ? (
                             <Image size={18} />
+                          ) : item.kind === "FRIEND_LINK" ? (
+                            <Heart size={18} />
                           ) : (
                             <FolderKanban size={18} />
                           )}
@@ -136,7 +141,9 @@ export async function AdminOverview({
                                 ? "articles"
                                 : item.kind === "PHOTO"
                                   ? "photos"
-                                  : "projects",
+                                  : item.kind === "FRIEND_LINK"
+                                    ? "friends"
+                                    : "projects",
                             )}
                           </small>
                         </span>
@@ -152,7 +159,9 @@ export async function AdminOverview({
                               ? `/admin/reviews/${item.id}`
                               : item.kind === "PHOTO"
                                 ? "/admin/photo-reviews"
-                                : "/admin/project-reviews"
+                                : item.kind === "FRIEND_LINK"
+                                  ? "/admin/friend-reviews"
+                                  : "/admin/project-reviews"
                           }
                         >
                           {t("previewReview")}

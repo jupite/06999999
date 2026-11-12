@@ -2,6 +2,7 @@ import "server-only";
 import type { PrismaClient } from "@/generated/prisma/client";
 import { authorize, type Actor } from "../domain/permissions";
 import { listPendingArticles } from "./articles";
+import { listPendingFriends } from "./friends";
 import { listPendingPhotos } from "./photos";
 import { listPendingProjects } from "./projects";
 
@@ -14,6 +15,10 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
       const articles = await listPendingArticles(tx, actor);
       const projects = await listPendingProjects(tx, actor, 1);
       const photos = await listPendingPhotos(tx, actor);
+      const friends = await listPendingFriends(tx, actor);
+      const pendingFriends = await tx.content.count({
+        where: { kind: "FRIEND_LINK", revisions: { some: { state: "PENDING_HUMAN" } } },
+      });
       const pendingPhotos = await tx.content.count({
         where: { kind: "PHOTO", revisions: { some: { state: "PENDING_HUMAN" } } },
       });
@@ -27,7 +32,7 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
       SELECT COUNT(*) AS count FROM "Content" c
       JOIN "ContentRevision" r ON r."contentId" = c.id
         AND r.version = c."publishedVersion" AND r.state = 'PUBLISHED'
-      WHERE c.kind IN ('POST', 'PROJECT', 'PHOTO')
+      WHERE c.kind IN ('POST', 'PROJECT', 'PHOTO', 'FRIEND_LINK')
     `;
       const pendingComments = await tx.comment.count({
         where: { state: "PENDING_HUMAN", content: { kind: "POST" } },
@@ -38,7 +43,7 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
         where: { id: "site" },
         select: { totalMediaLimitBytes: true },
       });
-      const pending = [...articles, ...projects, ...photos]
+      const pending = [...articles, ...projects, ...photos, ...friends]
         .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime() || a.id.localeCompare(b.id))
         .slice(0, 6)
         .map((content) => ({
@@ -51,6 +56,7 @@ export async function getAdminOverview(db: PrismaClient, actor: Actor | null) {
         pendingArticles,
         pendingProjects,
         pendingPhotos,
+        pendingFriends,
         pendingComments,
         published: Number(published.count),
         users,

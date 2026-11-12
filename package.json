@@ -20,6 +20,7 @@
     "db:migrate": "pnpm --filter @site/web db:migrate",
     "format": "prettier --write \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
     "format:check": "prettier --check \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
+    "test:friends": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/friends.integration.test.ts",
     "test:photos": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/photos.integration.test.ts src/server/services/photos-media.integration.test.ts",
     "test:comments": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/comments.integration.test.ts",
     "test:likes": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/likes.integration.test.ts",
