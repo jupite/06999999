@@ -1,5 +1,11 @@
 {
   "messages": {
+    "withdrawSubmission": "Withdraw submission",
+    "unpublishSubmission": "Unpublish",
+    "withdrawalConfirmTitle": "Confirm withdrawal",
+    "withdrawalConfirm": "Withdraw or unpublish “{title}”? It will leave the public list and review queue. Records and uploads are retained; restoration is currently unavailable.",
+    "withdrawalConfirmButton": "Confirm",
+    "withdrawalCancel": "Cancel",
     "adminPublishedHelp": "Public articles, projects, photos and friend links",
     "friendTitle": "Site name",
     "friendDescription": "Site description",
@@ -529,6 +535,9 @@
     "authorCannotPublish": "The author cannot publish right now. {reason} You can reject this submission and explain why."
   },
   "system": {
+    "withdrawalConflict": "Content changed, was already handled, or belongs to another account. Refresh the page.",
+    "withdrawalConfirmationRequired": "Confirm the withdrawal first.",
+    "withdrawalFailed": "Withdrawal failed. Try again later.",
     "invalidFriend": "Enter a site name and valid HTTP/HTTPS URL. Name: up to 160 characters; description: up to 2,000.",
     "friendIconUnavailable": "Icon is unavailable or belongs to another author.",
     "friendSubmissionConflict": "Submission ID already used. Refresh and submit again.",

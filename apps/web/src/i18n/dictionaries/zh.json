@@ -1,5 +1,11 @@
 {
   "messages": {
+    "withdrawSubmission": "撤回投稿",
+    "unpublishSubmission": "撤下内容",
+    "withdrawalConfirmTitle": "确认撤回或撤下",
+    "withdrawalConfirm": "确认撤回或撤下「{title}」？内容将退出公开展示和审核队列，记录及上传文件保留，目前不提供恢复入口。",
+    "withdrawalConfirmButton": "确认操作",
+    "withdrawalCancel": "取消",
     "adminPublishedHelp": "已公开的文章、项目、照片与友链",
     "friendTitle": "站点名称",
     "friendDescription": "站点介绍",
@@ -529,6 +535,9 @@
     "authorCannotPublish": "作者当前不能发布：{reason}。可填写原因拒绝该投稿。"
   },
   "system": {
+    "withdrawalConflict": "内容已变化、已被处理或不属于当前账号，请刷新。",
+    "withdrawalConfirmationRequired": "请先确认撤回或撤下操作。",
+    "withdrawalFailed": "撤回或撤下失败，请稍后重试。",
     "invalidFriend": "请填写站点名称和有效的 HTTP/HTTPS 地址；名称最多 160 字，介绍最多 2000 字。",
     "friendIconUnavailable": "图标不可用或不属于当前作者。",
     "friendSubmissionConflict": "申请标识已使用，请刷新后重新申请。",

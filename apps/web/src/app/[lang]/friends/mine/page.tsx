@@ -1,5 +1,6 @@
+import { authorize } from "@/server/domain/permissions";
 import { ArticleAccessNotice, ArticlePagination, ArticleTime } from "@/components/server";
-import { ArticleImage } from "@/components";
+import { ArticleImage, ContentWithdrawal } from "@/components";
 import { LocaleLink } from "@/i18n/link";
 import { getI18n } from "@/i18n/server";
 import { imageUrl } from "@/media/urls";
@@ -65,6 +66,16 @@ export default async function MyFriendsPage({
                 </div>
               )}
               <p className="project-summary">{revision.summary}</p>
+              {authorize(actor, "content.editOwn").allowed &&
+                (revision.state === "PENDING_HUMAN" || revision.state === "PUBLISHED") && (
+                  <ContentWithdrawal
+                    id={friend.id}
+                    version={revision.version}
+                    kind="FRIEND_LINK"
+                    state={revision.state}
+                    title={revision.title}
+                  />
+                )}
               {revision.state === "REJECTED" && (
                 <p>{t("friendRejection", { reason: revision.reviews[0]?.reason ?? "" })}</p>
               )}

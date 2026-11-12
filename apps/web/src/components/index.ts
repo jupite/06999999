@@ -26,3 +26,4 @@ export { PhotoForm } from "./photo-form";
 export { PhotoReviewForm } from "./photo-review-form";
 export { FriendForm } from "./friend-form";
 export { FriendReviewForm } from "./friend-review-form";
+export { ContentWithdrawal } from "./content-withdrawal";
