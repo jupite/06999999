@@ -19,3 +19,4 @@ export { ProjectForm } from "./project-form";
 export { ProjectReviewForm } from "./project-review-form";
 
 export { PasswordLogin } from "./password-login";
+export { ArticleLike } from "./article-like";

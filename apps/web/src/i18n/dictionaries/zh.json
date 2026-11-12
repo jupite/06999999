@@ -1,5 +1,9 @@
 {
   "messages": {
+    "articleLike": "点赞",
+    "articleUnlike": "取消点赞",
+    "articleLikeCount": "{count} 人点赞",
+    "articleLikeLoading": "正在加载点赞状态",
     "auditTitle": "操作记录",
     "auditHelp": "按时间倒序查看操作；操作者与目标按 ID 精确筛选。展开查看变更前后值。",
     "auditGroup": "功能模块",
@@ -477,6 +481,8 @@
     "authorCannotPublish": "作者当前不能发布：{reason}。可填写原因拒绝该投稿。"
   },
   "system": {
+    "likeArticleMissing": "文章不存在或尚未公开",
+    "likeRequestFailed": "点赞状态暂时无法加载，请刷新重试",
     "loginRequired": "请先登录",
     "accountBanned": "账号已封禁",
     "permissionDenied": "该权限已被禁止",

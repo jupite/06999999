@@ -9,6 +9,7 @@ tags:
   - name: 基础
   - name: 登录
   - name: 音乐
+  - name: 点赞
   - name: 媒体
 paths:
   /api/health:
@@ -265,6 +266,112 @@ paths:
             image/webp:
               schema: { type: string, format: binary }
         "404": { description: 图片不存在或当前请求无权读取，响应体为空 }
+  /api/articles/{slug}/like:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        description: 公开文章的 slug
+        schema: { type: string, minLength: 1, maxLength: 200 }
+    get:
+      operationId: getArticleLike
+      summary: 查看文章点赞数量及当前账号状态
+      description: 访客可查看数量；登录后返回本人的点赞状态。
+      tags: [点赞]
+      security: [{}, { SiteSession: [] }]
+      responses:
+        "200":
+          description: 当前点赞状态
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArticleLike" }
+              example: { count: 1, liked: true }
+        "404":
+          description: 文章不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeArticleMissing }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeRequestFailed }
+    put:
+      operationId: likeArticle
+      summary: 点赞文章（重复请求不增加数量）
+      description: 要求同源请求及 like.toggle 权限。仅允许操作已公开文章，无需审核。
+      tags: [点赞]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200":
+          description: 当前点赞状态
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArticleLike" }
+              example: { count: 1, liked: true }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 权限不足或非同源请求
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: permissionDenied }
+        "404":
+          description: 文章不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeArticleMissing }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeRequestFailed }
+    delete:
+      operationId: unlikeArticle
+      summary: 取消点赞（重复请求不重复扣减）
+      description: 要求同源请求及 like.toggle 权限。仅允许操作已公开文章，无需审核。
+      tags: [点赞]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200":
+          description: 当前点赞状态
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArticleLike" }
+              example: { count: 1, liked: true }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 权限不足或非同源请求
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: permissionDenied }
+        "404":
+          description: 文章不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeArticleMissing }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeRequestFailed }
 components:
   securitySchemes:
     SiteSession:
@@ -278,6 +385,12 @@ components:
       name: next-auth.csrf-token
       description: 与表单 csrfToken 配对。HTTPS 部署时使用带安全前缀的 Cookie。
   schemas:
+    ArticleLike:
+      type: object
+      required: [count, liked]
+      properties:
+        count: { type: integer, minimum: 0 }
+        liked: { type: boolean }
     AuthRedirect:
       type: object
       required: [url]

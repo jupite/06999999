@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/server/db";
 import { readPublishedArticle } from "@/server/services/articles";
 import { ArticleBody, ArticleTime, ArticleNavigation } from "@/components/server";
-import { ArticleTopics } from "@/components";
+import { ArticleTopics, ArticleLike } from "@/components";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { t } = await getI18n();
@@ -27,6 +27,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         </p>
         <ArticleTopics category={article.category} tags={article.tags} publicLinks />
         <ArticleBody markdown={article.markdown} />
+        <ArticleLike key={article.slug} slug={article.slug} />
       </article>
     </>
   );

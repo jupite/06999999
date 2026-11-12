@@ -1,5 +1,9 @@
 {
   "messages": {
+    "articleLike": "Like",
+    "articleUnlike": "Unlike",
+    "articleLikeCount": "{count} likes",
+    "articleLikeLoading": "Loading likes",
     "auditTitle": "Activity log",
     "auditHelp": "View recent activity. Filter by exact operator or target ID and expand changes.",
     "auditGroup": "Module",
@@ -477,6 +481,8 @@
     "authorCannotPublish": "The author cannot publish right now. {reason} You can reject this submission and explain why."
   },
   "system": {
+    "likeArticleMissing": "Article is unavailable or unpublished",
+    "likeRequestFailed": "Likes are unavailable. Refresh to try again.",
     "loginRequired": "Please sign in.",
     "accountBanned": "This account is banned.",
     "permissionDenied": "Your account does not have this permission.",
