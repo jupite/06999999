@@ -8,15 +8,21 @@ export function FriendForm({
   submissionId,
   owner,
   canUpload,
+  initial,
 }: {
   submissionId: string;
   owner: boolean;
   canUpload: boolean;
+  initial?: { sourceId: string; title: string; summary: string; url: string; iconUrl: string };
 }) {
   const { locale, t, notice } = useI18n();
   const [error, action, pending] = useActionState(submitFriendAction.bind(null, locale), null);
-  const [fields, setFields] = useState({ title: "", summary: "", url: "" });
-  const [icon, setIcon] = useState(""),
+  const [fields, setFields] = useState({
+    title: initial?.title ?? "",
+    summary: initial?.summary ?? "",
+    url: initial?.url ?? "",
+  });
+  const [icon, setIcon] = useState(initial?.iconUrl ?? ""),
     [uploading, setUploading] = useState(false),
     [uploadError, setUploadError] = useState<Notice | null>(null);
   async function upload(file: File) {
@@ -36,6 +42,7 @@ export function FriendForm({
   return (
     <form action={action} className="panel draft-card">
       <input type="hidden" name="submissionId" value={submissionId} />
+      {initial && <input type="hidden" name="sourceId" value={initial.sourceId} />}
       <input type="hidden" name="iconUrl" value={icon} />
       <label className="draft-title">
         {t("friendTitle")}

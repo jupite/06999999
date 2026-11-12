@@ -1,3 +1,4 @@
+import { readRejectedSubmission, ResubmissionError } from "./resubmission";
 import { resolveAccountActor } from "../access";
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
@@ -50,6 +51,9 @@ export async function submitPhoto(db: Db, actor: Actor | null, form: FormData) {
   const mediaId = imageIdFromUrl(url);
   if (!mediaId) throw new PhotoError("photoImageRequired");
   const current = await currentAuthor(db, author.id);
+  const sourceId = form.get("sourceId");
+  if (sourceId !== null && !(await readRejectedSubmission(db, current, sourceId, "PHOTO")))
+    throw new ResubmissionError("submissionCopyUnavailable");
   const previous = await db.content.findUnique({
     where: { slug },
     include: { revisions: { include: { media: true, tags: true } } },
@@ -100,7 +104,7 @@ export async function submitPhoto(db: Db, actor: Actor | null, form: FormData) {
       actorId: author.id,
       action: "photo.submit",
       targetId: content.id,
-      after: { state, version: 1, mediaId },
+      after: { state, version: 1, mediaId, ...(typeof sourceId === "string" ? { sourceId } : {}) },
     },
   });
   return content;

@@ -1,4 +1,5 @@
 "use server";
+import { ResubmissionError } from "@/server/services/resubmission";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { defaultLocale, isLocale, type SystemKey } from "@/i18n/messages";
@@ -9,6 +10,7 @@ import { PhotoError, submitPhoto, reviewPhoto } from "@/server/services/photos";
 import { DraftError } from "@/server/domain/drafts";
 import { ArticleError } from "@/server/domain/articles";
 function failure(error: unknown): SystemKey {
+  if (error instanceof ResubmissionError) return error.key;
   return error instanceof PhotoError
     ? error.key
     : error instanceof DraftError

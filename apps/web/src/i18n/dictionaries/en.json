@@ -1,5 +1,7 @@
 {
   "messages": {
+    "editResubmission": "Edit and resubmit",
+    "resubmissionHelp": "This creates a new submission and retains the rejected record and review reason. Reusing an uploaded image does not consume more storage.",
     "roleAll": "All roles",
     "roleViewUsers": "View assigned users",
     "roleSettings": "Role presets",
@@ -560,6 +562,7 @@
     "authorCannotPublish": "The author cannot publish right now. {reason} You can reject this submission and explain why."
   },
   "system": {
+    "submissionCopyUnavailable": "The original submission cannot be resubmitted. Refresh your list.",
     "permissionCapabilityUnknown": "Personal overrides are unavailable for this capability.",
     "roleInvalid": "Invalid role name, permissions or expected version.",
     "roleMissing": "Role not found.",

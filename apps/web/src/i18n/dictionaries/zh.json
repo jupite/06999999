@@ -1,5 +1,7 @@
 {
   "messages": {
+    "editResubmission": "修改后重新投稿",
+    "resubmissionHelp": "将创建一条新投稿，原拒绝记录及审核原因保留。复用已有图片不会重复占用上传容量。",
     "roleAll": "全部角色",
     "roleViewUsers": "查看分配用户",
     "roleSettings": "角色预设",
@@ -560,6 +562,7 @@
     "authorCannotPublish": "作者当前不能发布：{reason}。可填写原因拒绝该投稿。"
   },
   "system": {
+    "submissionCopyUnavailable": "原投稿不可重新投稿，请刷新个人列表。",
     "permissionCapabilityUnknown": "该能力不能设置个人权限。",
     "roleInvalid": "角色参数无效。请检查名称、权限或原版本。",
     "roleMissing": "角色不存在。",

@@ -1,3 +1,4 @@
+import { readRejectedSubmission, ResubmissionError } from "./resubmission";
 import { resolveAccountActor } from "../access";
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
@@ -55,6 +56,9 @@ export async function submitFriend(db: Db, actor: Actor | null, form: FormData) 
   const mediaId = icon ? imageIdFromUrl(icon) : undefined;
   if (icon && !mediaId) throw new FriendError("friendIconUnavailable");
   const current = await authorActor(db, author.id);
+  const sourceId = form.get("sourceId");
+  if (sourceId !== null && !(await readRejectedSubmission(db, current, sourceId, "FRIEND_LINK")))
+    throw new ResubmissionError("submissionCopyUnavailable");
   if (mediaId) await requireIcon(db, current, mediaId);
   const previous = await db.content.findUnique({
     where: { slug },
@@ -97,7 +101,12 @@ export async function submitFriend(db: Db, actor: Actor | null, form: FormData) 
       actorId: author.id,
       action: "friend.submit",
       targetId: content.id,
-      after: { state, version: 1, url: url.href },
+      after: {
+        state,
+        version: 1,
+        url: url.href,
+        ...(typeof sourceId === "string" ? { sourceId } : {}),
+      },
     },
   });
   return content;

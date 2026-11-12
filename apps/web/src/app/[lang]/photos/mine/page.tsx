@@ -39,6 +39,14 @@ export default async function MyPhotosPage({
           return (
             <article className="panel draft-card" key={photo.id}>
               <h2>{revision.title}</h2>
+              {revision.state === "REJECTED" &&
+                authorize(actor, "content.editOwn").allowed &&
+                authorize(actor, "photo.submit").allowed &&
+                authorize(actor, "image.upload").allowed && (
+                  <LocaleLink className="button secondary" href={`/photos/submit?copy=${photo.id}`}>
+                    {t("editResubmission")}
+                  </LocaleLink>
+                )}
               <p>
                 {t(articleStateLabels[revision.state])} · <ArticleTime value={photo.createdAt} />
               </p>

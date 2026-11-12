@@ -20,6 +20,7 @@
     "db:migrate": "pnpm --filter @site/web db:migrate",
     "format": "prettier --write \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
     "format:check": "prettier --check \"*.{json,jsonc,yaml,yml,md,js,mjs,cjs}\" \".vscode\" \"apps/web\" \"doc\" \"infra\" --ignore-unknown",
+    "test:resubmission": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/resubmission.integration.test.ts",
     "test:permissions": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/user-permissions.integration.test.ts",
     "test:roles": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/roles.integration.test.ts",
     "test:features": "pnpm --filter @site/web exec tsx --conditions=react-server --test src/server/services/features.integration.test.ts",

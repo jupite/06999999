@@ -40,6 +40,17 @@ export default async function MyFriendsPage({
           return (
             <article className="panel draft-card" key={friend.id}>
               <h2>{revision.title}</h2>
+              {revision.state === "REJECTED" &&
+                authorize(actor, "content.editOwn").allowed &&
+                authorize(actor, "friend.submit").allowed &&
+                true && (
+                  <LocaleLink
+                    className="button secondary"
+                    href={`/friends/submit?copy=${friend.id}`}
+                  >
+                    {t("editResubmission")}
+                  </LocaleLink>
+                )}
               <p>
                 {parseProjectUrl(revision.targetUrl) ? (
                   <a

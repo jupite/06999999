@@ -8,14 +8,29 @@ export function PhotoForm({
   submissionId,
   owner,
   categories,
+  initial,
 }: {
   submissionId: string;
   owner: boolean;
   categories: { id: string; name: string }[];
+  initial?: {
+    sourceId: string;
+    title: string;
+    summary: string;
+    categoryId: string | null;
+    tagText: string;
+    imageUrl: string;
+  };
 }) {
   const { locale, t, notice } = useI18n();
   const [error, action, pending] = useActionState(submitPhotoAction.bind(null, locale), null);
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState(initial?.imageUrl ?? "");
+  const [fields, setFields] = useState({
+    title: initial?.title ?? "",
+    summary: initial?.summary ?? "",
+    categoryId: initial?.categoryId ?? "",
+    tagText: initial?.tagText ?? "",
+  });
   const [uploading, setUploading] = useState(false),
     [uploadError, setUploadError] = useState<Notice | null>(null);
   async function upload(file: File) {
@@ -35,18 +50,38 @@ export function PhotoForm({
   return (
     <form action={action} className="panel draft-card">
       <input type="hidden" name="submissionId" value={submissionId} />
+      {initial && <input type="hidden" name="sourceId" value={initial.sourceId} />}
       <input type="hidden" name="imageUrl" value={image} />
       <label className="draft-title">
         {t("photoTitle")}
-        <input name="title" required maxLength={160} disabled={pending} />
+        <input
+          name="title"
+          value={fields.title}
+          onChange={(event) => setFields({ ...fields, title: event.target.value })}
+          required
+          maxLength={160}
+          disabled={pending}
+        />
       </label>
       <label className="draft-title">
         {t("photoCaption")}
-        <textarea name="summary" rows={3} maxLength={2000} disabled={pending} />
+        <textarea
+          value={fields.summary}
+          onChange={(event) => setFields({ ...fields, summary: event.target.value })}
+          name="summary"
+          rows={3}
+          maxLength={2000}
+          disabled={pending}
+        />
       </label>
       <label className="draft-title">
         {t("articleCategory")}
-        <select name="categoryId" disabled={pending}>
+        <select
+          value={fields.categoryId}
+          onChange={(event) => setFields({ ...fields, categoryId: event.target.value })}
+          name="categoryId"
+          disabled={pending}
+        >
           <option value="">{t("noArticleCategory")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
@@ -57,7 +92,13 @@ export function PhotoForm({
       </label>
       <label className="draft-title">
         {t("articleTags")}
-        <input name="tagText" maxLength={1000} disabled={pending} />
+        <input
+          value={fields.tagText}
+          onChange={(event) => setFields({ ...fields, tagText: event.target.value })}
+          name="tagText"
+          maxLength={1000}
+          disabled={pending}
+        />
         <small>{t("photoTagsHelp")}</small>
       </label>
       <label className="draft-title">
