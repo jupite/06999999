@@ -1,4 +1,4 @@
-import { UserRoleForm } from "@/components";
+import { UserRoleForm, UserPermissionForm } from "@/components";
 import { listRoles } from "@/server/services/roles";
 import { resolveAccountActor } from "@/server/access";
 import { notFound } from "next/navigation";
@@ -137,38 +137,25 @@ export default async function UserAccessPage({
               const current = account.overrides[capability] ?? "inherit";
               const effective = authorize(account, capability);
               return (
-                <form className="access-setting" action={action} key={`${capability}:${current}`}>
-                  <input type="hidden" name="scope" value="permission" />
-                  <input type="hidden" name="capability" value={capability} />
-                  <input type="hidden" name="expected" value={current} />
-                  <label className="draft-title">
-                    {t(capabilityLabels[capability])}
-                    <select name="value" defaultValue={current}>
-                      {permissionModes.map((mode) => (
-                        <option key={mode} value={mode}>
-                          {t(permissionModeLabels[mode])}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <p>
-                    {t(effective.allowed ? "permissionEffectiveAllow" : "permissionEffectiveDeny")}{" "}
-                    · {system(effective.reason)}
-                  </p>
-                  <p className="muted">
-                    {t("roleRuleLabel", {
-                      mode: t(permissionModeLabels[account.roleRules?.[capability] ?? "inherit"]),
-                    })}
-                  </p>
-                  {capability === "image.upload" &&
-                    effective.allowed &&
-                    used + reserved >= limit && (
-                      <p className="muted">{t("userImageQuotaUnavailable")}</p>
-                    )}
-                  <button type="submit" className="button secondary">
-                    {t("saveUserSetting")}
-                  </button>
-                </form>
+                <UserPermissionForm
+                  key={capability}
+                  userId={user.id}
+                  capability={capability}
+                  initialMode={
+                    current === "ALLOW" ? "allow" : current === "DENY" ? "deny" : "inherit"
+                  }
+                  label={t(capabilityLabels[capability])}
+                  roleMode={
+                    account.roleRules?.[capability] === "ALLOW"
+                      ? "allow"
+                      : account.roleRules?.[capability] === "DENY"
+                        ? "deny"
+                        : "inherit"
+                  }
+                  allowed={effective.allowed}
+                  reason={effective.reason}
+                  quotaUnavailable={capability === "image.upload" && used + reserved >= limit}
+                />
               );
             })}
           </div>

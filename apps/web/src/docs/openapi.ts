@@ -1,7 +1,6 @@
 export const openApiDocuments = [
   { id: "web", file: "web.openapi.yaml", title: "docsApiWeb", draft: false },
   { id: "python", file: "python.openapi.json", title: "docsApiPython", draft: false },
-  { id: "admin-draft", file: "admin-draft.openapi.yaml", title: "docsApiAdminDraft", draft: true },
 ] as const;
 
 export const openApiAssets = [

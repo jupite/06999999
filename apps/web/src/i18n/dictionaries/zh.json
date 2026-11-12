@@ -560,6 +560,7 @@
     "authorCannotPublish": "作者当前不能发布：{reason}。可填写原因拒绝该投稿。"
   },
   "system": {
+    "permissionCapabilityUnknown": "该能力不能设置个人权限。",
     "roleInvalid": "角色参数无效。请检查名称、权限或原版本。",
     "roleMissing": "角色不存在。",
     "roleNameTaken": "角色名称已存在，请换一个名称。",

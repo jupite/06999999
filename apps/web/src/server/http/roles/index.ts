@@ -1,3 +1,4 @@
+import type { SystemKey } from "@/i18n/messages";
 import "server-only";
 import type { Actor } from "../../domain/permissions";
 import { authorize } from "../../domain/permissions";
@@ -8,6 +9,7 @@ export async function roleRequest(
   request: Request,
   write: boolean,
   run: (actor: Actor) => Promise<Response>,
+  failureKey: SystemKey = "roleRequestFailed",
 ) {
   if (write) {
     const site = request.headers.get("sec-fetch-site"),
@@ -23,16 +25,19 @@ export async function roleRequest(
   } catch (error) {
     if (!(error instanceof RoleError)) console.error("Role request failed", error);
     return Response.json(
-      { error: error instanceof RoleError ? error.key : "roleRequestFailed" },
+      { error: error instanceof RoleError ? error.key : failureKey },
       { status: error instanceof RoleError ? error.status : 500, headers: roleHeaders },
     );
   }
 }
-export async function roleBody(request: Request): Promise<unknown> {
+export async function roleBody(
+  request: Request,
+  invalidKey: SystemKey = "roleInvalid",
+): Promise<unknown> {
   if (!request.headers.get("content-type")?.startsWith("application/json"))
-    throw new RoleError("roleInvalid", 400);
+    throw new RoleError(invalidKey, 400);
   const reader = request.body?.getReader();
-  if (!reader) throw new RoleError("roleInvalid", 400);
+  if (!reader) throw new RoleError(invalidKey, 400);
   let length = 0;
   const chunks: Uint8Array[] = [];
   try {
@@ -42,7 +47,7 @@ export async function roleBody(request: Request): Promise<unknown> {
       length += value.byteLength;
       if (length > 8192) {
         await reader.cancel();
-        throw new RoleError("roleInvalid", 413);
+        throw new RoleError(invalidKey, 413);
       }
       chunks.push(value);
     }
@@ -52,6 +57,6 @@ export async function roleBody(request: Request): Promise<unknown> {
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch {
-    throw new RoleError("roleInvalid", 400);
+    throw new RoleError(invalidKey, 400);
   }
 }

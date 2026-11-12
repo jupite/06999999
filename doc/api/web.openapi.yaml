@@ -913,6 +913,103 @@ paths:
         "403": { $ref: "#/components/responses/RolesForbidden" }
         "404": { $ref: "#/components/responses/RolesNotFound" }
         "500": { $ref: "#/components/responses/RolesFailed" }
+  /api/admin/users/{id}/permissions/{key}:
+    parameters:
+      - $ref: "#/components/parameters/RoleOrUserId"
+      - name: key
+        in: path
+        required: true
+        description: 可配置的业务能力，不包含 site.manage
+        schema:
+          type: string
+          enum:
+            [
+              post.submit,
+              project.submit,
+              photo.submit,
+              music.submit,
+              friend.submit,
+              comment.submit,
+              image.upload,
+              content.editOwn,
+              like.toggle,
+            ]
+    put:
+      operationId: updateUserPermission
+      summary: 设置用户个人权限例外
+      description: 仅站主、同源请求。mode 为 inherit 时删除个人例外并恢复角色或默认规则，不改变角色。expectedMode 不匹配时返回 409，相同值不重复审计。
+      tags: [用户授权]
+      security: [{ SiteSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [mode, expectedMode]
+              properties:
+                mode: { $ref: "#/components/schemas/Mode" }
+                expectedMode: { $ref: "#/components/schemas/Mode" }
+            example: { mode: deny, expectedMode: inherit }
+      responses:
+        "200":
+          description: 当前个人设置与最终生效结果
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EffectivePermission" }
+              example:
+                {
+                  key: image.upload,
+                  featureEnabled: true,
+                  roleRule: allow,
+                  userOverride: deny,
+                  allowed: false,
+                  source: user_override,
+                  reason: permissionDenied,
+                }
+        "400":
+          description: 参数或 JSON 无效
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: invalidUserAccess }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 非站主或跨站请求
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: permissionDenied }
+        "404":
+          description: 用户不存在或能力不支持个人设置
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: permissionCapabilityUnknown }
+        "409":
+          description: 个人设置已变化
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: userAccessConflict }
+        "413":
+          description: JSON 请求体超过 8 KiB
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: invalidUserAccess }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: userAccessSaveFailed }
 components:
   securitySchemes:
     SiteSession:

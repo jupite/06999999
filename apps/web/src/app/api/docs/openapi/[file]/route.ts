@@ -4,6 +4,11 @@ import { openApiAssets, openApiDocuments } from "@/docs/openapi";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ file: string }> }) {
   const { file } = await params;
+  if (file === "admin-draft.openapi.yaml")
+    return new Response(null, {
+      status: 307,
+      headers: { Location: "/api/docs/openapi/web.openapi.yaml", "Cache-Control": "no-store" },
+    });
   const spec = openApiDocuments.find((entry) => entry.file === file);
   const asset = openApiAssets.find((entry) => entry.file === file);
   if (!spec && !asset) return new Response(null, { status: 404 });

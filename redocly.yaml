@@ -3,8 +3,6 @@ apis:
     root: doc/api/web.openapi.yaml
   python:
     root: doc/api/python.openapi.json
-  admin-draft:
-    root: doc/api/admin-draft.openapi.yaml
 
 extends:
   - spec
