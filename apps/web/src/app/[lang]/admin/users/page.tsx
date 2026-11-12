@@ -1,3 +1,4 @@
+import styles from "@/components/admin-shell/admin.module.css";
 import { ArticleAccessNotice, ArticlePagination } from "@/components/server";
 import { LocaleLink } from "@/i18n/link";
 import { localePath } from "@/i18n/routing";
@@ -108,26 +109,60 @@ export default async function UsersPage({
           )}
         </div>
       </form>
-      <div className="draft-list">
-        {users.slice(0, 20).map((user) => (
-          <article key={user.id} className="panel draft-card">
-            <h2>{user.name}</h2>
-            <p>
-              {t("userGithubId", { id: user.githubId })} ·{" "}
-              {t(user.banned ? "bannedUser" : "activeUser")}
-            </p>
-            <p>
-              {t("userImageUsage", {
-                used: bytes.format(user.quota?.usedBytes ?? 0n),
-                limit: bytes.format(user.quota?.limitBytes ?? 0n),
-              })}
-            </p>
-            <LocaleLink className="button secondary" href={`/admin/users/${user.id}`}>
-              {t("editUserAccess")}
-            </LocaleLink>
-          </article>
-        ))}
-      </div>
+      {users.length > 0 && (
+        <section className="panel">
+          <div
+            className={styles.tableWrap}
+            tabIndex={0}
+            role="region"
+            aria-label={t("userAccessManagement")}
+          >
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">{t("userAccount")}</th>
+                  <th scope="col">{t("userStatus")}</th>
+                  <th scope="col">{t("customPermissions")}</th>
+                  <th scope="col">{t("userStorage")}</th>
+                  <th scope="col">{t("userActions")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.slice(0, 20).map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <span className={styles.pendingTitle}>{user.name}</span>
+                      <small>{t("userGithubId", { id: user.githubId })}</small>
+                    </td>
+                    <td>{t(user.banned ? "bannedUser" : "activeUser")}</td>
+                    <td>
+                      {user.permissions.length
+                        ? t("userPermissionCounts", {
+                            allow: user.permissions.filter(({ effect }) => effect === "ALLOW")
+                              .length,
+                            deny: user.permissions.filter(({ effect }) => effect === "DENY").length,
+                          })
+                        : t("permissionInherit")}
+                    </td>
+                    <td>
+                      {t("userImageUsage", {
+                        used: bytes.format(user.quota?.usedBytes ?? 0n),
+                        limit: bytes.format(user.quota?.limitBytes ?? 0n),
+                      })}
+                    </td>
+                    <td>
+                      <LocaleLink href={`/admin/users/${user.id}`}>
+                        {t("editUserAccess")}
+                        <span className="sr-only"> · {user.name}</span>
+                      </LocaleLink>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
       {!users.length && (
         <section className="panel empty-state">
           <h2>{t("usersEmpty")}</h2>

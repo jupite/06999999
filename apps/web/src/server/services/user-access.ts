@@ -75,6 +75,10 @@ export function listUserAccounts(
       name: true,
       githubId: true,
       banned: true,
+      permissions: {
+        where: { capability: { in: editableCapabilities } },
+        select: { effect: true },
+      },
       quota: { select: { usedBytes: true, limitBytes: true } },
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
