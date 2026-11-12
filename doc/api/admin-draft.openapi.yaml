@@ -2,173 +2,12 @@ openapi: 3.1.0
 info:
   title: 后台权限接口草案
   version: 0.1.0
-  description: 角色及个人授权设计中。操作需要站主的 site.manage 权限，每个用户暂按一个自定义角色设计。全站功能开关已实现，见 Web 接口。
+  description: 个人权限覆盖的 HTTP 接口仍为草案。角色、用户角色分配、有效权限查询及全站开关已实现，见 Web 接口。
 servers:
   - url: /
 tags:
-  - name: 角色
   - name: 用户授权
 paths:
-  /api/admin/roles:
-    get:
-      operationId: listRoles
-      summary: 查看角色和分配人数
-      tags: [角色]
-      security: [{ SiteSession: [] }]
-      responses:
-        "200":
-          description: 角色列表
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [roles]
-                properties:
-                  roles:
-                    type: array
-                    items: { $ref: "#/components/schemas/Role" }
-              example:
-                roles:
-                  - {
-                      id: role_example,
-                      name: 图片贡献者,
-                      permissions: { image.upload: allow },
-                      userCount: 1,
-                    }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-    post:
-      operationId: createRole
-      summary: 创建权限预设角色
-      tags: [角色]
-      security: [{ SiteSession: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name, permissions]
-              properties:
-                name: { type: string, minLength: 1 }
-                permissions: { $ref: "#/components/schemas/RoleRules" }
-            example: { name: 图片贡献者, permissions: { image.upload: allow } }
-      responses:
-        "201": { $ref: "#/components/responses/RoleResult" }
-        "400": { $ref: "#/components/responses/InvalidRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-  /api/admin/roles/{id}:
-    parameters:
-      - $ref: "#/components/parameters/Id"
-    get:
-      operationId: getRole
-      summary: 查看角色权限预设
-      tags: [角色]
-      security: [{ SiteSession: [] }]
-      responses:
-        "200": { $ref: "#/components/responses/RoleResult" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-    patch:
-      operationId: updateRole
-      summary: 修改角色名称或权限
-      tags: [角色]
-      security: [{ SiteSession: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              minProperties: 1
-              additionalProperties: false
-              properties:
-                name: { type: string, minLength: 1 }
-                permissions: { $ref: "#/components/schemas/RoleRules" }
-            example: { permissions: { image.upload: allow } }
-      responses:
-        "200": { $ref: "#/components/responses/RoleResult" }
-        "400": { $ref: "#/components/responses/InvalidRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-    delete:
-      operationId: deleteRole
-      summary: 删除未分配给用户的角色
-      tags: [角色]
-      security: [{ SiteSession: [] }]
-      responses:
-        "204": { description: 已删除 }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-        "409":
-          description: 角色仍有用户使用
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-              example: { error: roleInUse }
-  /api/admin/users/{id}/role:
-    parameters:
-      - $ref: "#/components/parameters/Id"
-    put:
-      operationId: assignUserRole
-      summary: 分配、替换或解除用户角色
-      tags: [用户授权]
-      security: [{ SiteSession: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/RoleAssignment" }
-            example: { roleId: role_example }
-      responses:
-        "200":
-          description: 当前角色分配
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RoleAssignment" }
-              example: { roleId: role_example }
-        "400": { $ref: "#/components/responses/InvalidRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-  /api/admin/users/{id}/permissions:
-    parameters:
-      - $ref: "#/components/parameters/Id"
-    get:
-      operationId: listEffectivePermissions
-      summary: 查看用户各项权限和生效原因
-      description: 按账号封禁、全站开关、个人例外、角色、默认规则依次判定。
-      tags: [用户授权]
-      security: [{ SiteSession: [] }]
-      responses:
-        "200":
-          description: 用户角色和权限明细
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [roleId, permissions]
-                properties:
-                  roleId: { type: [string, "null"] }
-                  permissions:
-                    type: array
-                    items: { $ref: "#/components/schemas/EffectivePermission" }
-              example:
-                roleId: role_example
-                permissions:
-                  - key: project.submit
-                    featureEnabled: false
-                    roleRule: allow
-                    userOverride: inherit
-                    allowed: false
-                    source: feature_disabled
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
   /api/admin/users/{id}/permissions/{key}:
     parameters:
       - $ref: "#/components/parameters/Id"
@@ -235,22 +74,6 @@ components:
     Mode:
       type: string
       enum: [inherit, allow, deny]
-    RoleRules:
-      type: object
-      additionalProperties: { $ref: "#/components/schemas/Mode" }
-    Role:
-      type: object
-      required: [id, name, permissions, userCount]
-      properties:
-        id: { type: string }
-        name: { type: string }
-        permissions: { $ref: "#/components/schemas/RoleRules" }
-        userCount: { type: integer, minimum: 0 }
-    RoleAssignment:
-      type: object
-      required: [roleId]
-      properties:
-        roleId: { type: [string, "null"], description: null 表示解除分配 }
     EffectivePermission:
       type: object
       required: [key, featureEnabled, roleRule, userOverride, allowed, source]
@@ -264,18 +87,6 @@ components:
           type: string
           enum: [account_banned, feature_disabled, user_override, role, default]
   responses:
-    RoleResult:
-      description: 角色详情
-      content:
-        application/json:
-          schema: { $ref: "#/components/schemas/Role" }
-          example:
-            {
-              id: role_example,
-              name: 图片贡献者,
-              permissions: { image.upload: allow },
-              userCount: 0,
-            }
     InvalidRequest:
       description: 请求参数无效
       content:

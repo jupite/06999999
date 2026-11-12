@@ -47,6 +47,7 @@ const groups = [
       { href: "/admin/comment-reviews", label: "commentReviews", icon: ShieldCheck },
       { href: "/admin/reviews", label: "articleReview", icon: ShieldCheck },
       { href: "/admin/project-reviews", label: "projectReviews", icon: FolderKanban },
+      { href: "/admin/roles", label: "roleSettings", icon: Users },
       { href: "/admin/features", label: "featureSettings", icon: Settings2 },
       { href: "/admin/audit", label: "auditTitle", icon: History },
       { href: "/admin/users", label: "userAccessManagement", icon: Users },

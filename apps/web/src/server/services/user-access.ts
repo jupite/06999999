@@ -11,7 +11,12 @@ import {
 } from "../domain/permissions";
 
 type Db = Prisma.TransactionClient;
-const accessAuditActions = ["user.updateBan", "user.updatePermission", "media.updateUserAccess"];
+const accessAuditActions = [
+  "user.updateBan",
+  "user.updatePermission",
+  "media.updateUserAccess",
+  "user.assignRole",
+];
 const accountDetails = {
   quota: true,
   permissions: { where: { capability: { in: editableCapabilities } } },
@@ -45,17 +50,20 @@ export function listUserAccounts(
     status,
     capability,
     effect,
+    roleId,
   }: {
     page: number;
     search: string;
     status?: "active" | "banned" | "custom";
     capability?: EditableCapability;
     effect?: "ALLOW" | "DENY";
+    roleId?: string;
   },
 ) {
   requireOwner(actor);
   return db.user.findMany({
     where: {
+      ...(roleId && { assignedRoleId: roleId === "none" ? null : roleId }),
       ...(search && {
         OR: [{ githubId: search }, { name: { contains: search, mode: "insensitive" } }],
       }),
@@ -75,6 +83,7 @@ export function listUserAccounts(
       name: true,
       githubId: true,
       banned: true,
+      assignedRole: { select: { id: true, name: true } },
       permissions: {
         where: { capability: { in: editableCapabilities } },
         select: { effect: true },

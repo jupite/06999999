@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { maxUploadMib, MediaError, quotaBytes } from "../domain/media";
-import { authorize, type Actor } from "../domain/permissions";
+import { authorize, isPermissionMode, type Actor } from "../domain/permissions";
 import { lockUserAccount } from "./user-access";
 
 export function isGithubId(value: unknown): value is string {
@@ -53,8 +53,9 @@ export async function saveUserMediaAccess(
   const access = authorize(actor, "site.manage");
   if (!access.allowed) throw new MediaError(access.reason, 403);
   const limitBytes = quotaBytes(form.get("userMib"));
-  const enabled = form.get("enabled") === "on";
-  const effect = enabled ? "ALLOW" : "DENY";
+  const mode = form.get("permissionMode");
+  if (mode !== null && !isPermissionMode(mode)) throw new MediaError("invalidMediaQuota");
+  const effect = mode === null ? (form.get("enabled") === "on" ? "ALLOW" : "DENY") : mode;
   await db.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { githubId }, select: { id: true } });
     if (!user) throw new MediaError("mediaUserMissing");
@@ -62,11 +63,16 @@ export async function saveUserMediaAccess(
     const where = { userId_capability: { userId: user.id, capability: "image.upload" } };
     const previous = await tx.permissionOverride.findUnique({ where });
     const quota = await tx.storageQuota.findUnique({ where: { userId: user.id } });
-    await tx.permissionOverride.upsert({
-      where,
-      create: { ...where.userId_capability, effect },
-      update: { effect },
-    });
+    if (effect === "inherit")
+      await tx.permissionOverride.deleteMany({
+        where: { userId: user.id, capability: "image.upload" },
+      });
+    else
+      await tx.permissionOverride.upsert({
+        where,
+        create: { ...where.userId_capability, effect },
+        update: { effect },
+      });
     await tx.storageQuota.upsert({
       where: { userId: user.id },
       create: { userId: user.id, limitBytes },

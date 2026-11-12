@@ -28,3 +28,5 @@ export { FriendForm } from "./friend-form";
 export { FriendReviewForm } from "./friend-review-form";
 export { ContentWithdrawal } from "./content-withdrawal";
 export { FeatureSwitch } from "./feature-switch";
+export { RoleEditor } from "./role-editor";
+export { UserRoleForm } from "./user-role-form";

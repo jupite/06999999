@@ -22,6 +22,7 @@
 - [照片墙投稿](./photo-publishing.md)说明单张上传、分类标签、审核及图片可见性。
 - [项目卡片发布](./project-publishing.md)说明投稿、网址校验、审核和公开展示。
 - [后台操作记录](./admin-audit.md)说明审计查询、筛选和权限。
+- [角色预设与分配](./role-presets.md)说明角色管理、单用户分配和权限来源。
 - [全站功能开关](./feature-controls.md)说明全站暂停、优先级和恢复规则。
 - [用户权限管理](./permission-system.md)说明角色、名单、权限优先级和后台操作。
 - [音乐播放器](./music-player.md)说明网易云接入、曲目管理、歌词和悬浮播放。

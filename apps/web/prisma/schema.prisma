@@ -40,6 +40,8 @@ model User {
   role       Role     @default(MEMBER)
   banned     Boolean  @default(false)
   sessionVersion Int @default(0)
+  assignedRoleId String?
+  assignedRole PermissionRole? @relation(fields: [assignedRoleId], references: [id], onDelete: Restrict)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   permissions PermissionOverride[]
@@ -48,6 +50,7 @@ model User {
   comments    Comment[]
   likes       Like[]
   media       Media[]
+  @@index([assignedRoleId])
 }
 model PermissionOverride {
   id         String @id @default(cuid())
@@ -197,4 +200,21 @@ model FeatureFlag {
   key String @id
   enabled Boolean @default(true)
   updatedAt DateTime @updatedAt
+}
+
+model PermissionRole {
+  id String @id @default(cuid())
+  name String @unique
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  permissions RolePermission[]
+  users User[]
+}
+model RolePermission {
+  roleId String
+  capability String
+  effect RuleEffect
+  role PermissionRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([roleId, capability])
 }

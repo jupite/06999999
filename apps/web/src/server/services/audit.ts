@@ -12,6 +12,7 @@ export const auditGroups = [
   "photo",
   "friend",
   "feature",
+  "role",
 ] as const;
 export type AuditGroup = (typeof auditGroups)[number];
 export function isAuditGroup(value: unknown): value is AuditGroup {

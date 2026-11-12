@@ -9,6 +9,8 @@ tags:
   - name: 基础
   - name: 登录
   - name: 音乐
+  - name: 角色
+  - name: 用户授权
   - name: 功能开关
   - name: 评论
   - name: 点赞
@@ -720,6 +722,197 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
               example: { error: featureRequestFailed }
+  /api/admin/roles:
+    get:
+      operationId: listRoles
+      summary: 查看角色和分配人数
+      tags: [角色]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200":
+          description: 角色列表
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [roles]
+                properties:
+                  roles:
+                    type: array
+                    items: { $ref: "#/components/schemas/Role" }
+              example:
+                roles:
+                  - {
+                      id: role_example,
+                      name: 图片贡献者,
+                      permissions: { image.upload: allow },
+                      userCount: 1,
+                      version: 1,
+                    }
+        "401": { $ref: "#/components/responses/RolesUnauthorized" }
+        "403": { $ref: "#/components/responses/RolesForbidden" }
+        "500": { $ref: "#/components/responses/RolesFailed" }
+    post:
+      operationId: createRole
+      summary: 创建权限预设角色
+      tags: [角色]
+      security: [{ SiteSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, permissions]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 64 }
+                permissions: { $ref: "#/components/schemas/RoleRules" }
+            example: { name: 图片贡献者, permissions: { image.upload: allow } }
+      responses:
+        "201": { $ref: "#/components/responses/RoleResult" }
+        "400": { $ref: "#/components/responses/RolesInvalidRequest" }
+        "401": { $ref: "#/components/responses/RolesUnauthorized" }
+        "403": { $ref: "#/components/responses/RolesForbidden" }
+        "409": { $ref: "#/components/responses/RolesConflict" }
+        "413": { $ref: "#/components/responses/RolesTooLarge" }
+        "500": { $ref: "#/components/responses/RolesFailed" }
+  /api/admin/roles/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RoleOrUserId"
+    get:
+      operationId: getRole
+      summary: 查看角色权限预设
+      tags: [角色]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/RoleResult" }
+        "401": { $ref: "#/components/responses/RolesUnauthorized" }
+        "403": { $ref: "#/components/responses/RolesForbidden" }
+        "404": { $ref: "#/components/responses/RolesNotFound" }
+        "500": { $ref: "#/components/responses/RolesFailed" }
+    patch:
+      operationId: updateRole
+      summary: 修改角色名称或权限
+      tags: [角色]
+      security: [{ SiteSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 2
+              required: [expectedVersion]
+              anyOf: [{ required: [name] }, { required: [permissions] }]
+              additionalProperties: false
+              properties:
+                expectedVersion: { type: integer, minimum: 1 }
+                name: { type: string, minLength: 1, maxLength: 64 }
+                permissions: { $ref: "#/components/schemas/RoleRules" }
+            example: { expectedVersion: 1, permissions: { image.upload: allow } }
+      responses:
+        "200": { $ref: "#/components/responses/RoleResult" }
+        "400": { $ref: "#/components/responses/RolesInvalidRequest" }
+        "401": { $ref: "#/components/responses/RolesUnauthorized" }
+        "403": { $ref: "#/components/responses/RolesForbidden" }
+        "404": { $ref: "#/components/responses/RolesNotFound" }
+        "409": { $ref: "#/components/responses/RolesConflict" }
+        "413": { $ref: "#/components/responses/RolesTooLarge" }
+        "500": { $ref: "#/components/responses/RolesFailed" }
+    delete:
+      operationId: deleteRole
+      summary: 删除未分配给用户的角色
+      parameters:
+        - name: expectedVersion
+          in: query
+          required: true
+          description: 当前读到的角色版本
+          schema: { type: integer, minimum: 1 }
+      tags: [角色]
+      security: [{ SiteSession: [] }]
+      responses:
+        "204": { description: 已删除 }
+        "401": { $ref: "#/components/responses/RolesUnauthorized" }
+        "403": { $ref: "#/components/responses/RolesForbidden" }
+        "404": { $ref: "#/components/responses/RolesNotFound" }
+        "409":
+          description: 角色仍有用户使用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: roleInUse }
+        "400": { $ref: "#/components/responses/RolesInvalidRequest" }
+        "500": { $ref: "#/components/responses/RolesFailed" }
+  /api/admin/users/{id}/role:
+    parameters:
+      - $ref: "#/components/parameters/RoleOrUserId"
+    put:
+      operationId: assignUserRole
+      summary: 分配、替换或解除用户角色
+      tags: [用户授权]
+      security: [{ SiteSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [roleId, expectedRoleId]
+              properties:
+                roleId: { type: [string, "null"], minLength: 1, maxLength: 100 }
+                expectedRoleId: { type: [string, "null"], minLength: 1, maxLength: 100 }
+            example: { roleId: role_example, expectedRoleId: null }
+      responses:
+        "200":
+          description: 当前角色分配
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoleAssignment" }
+              example: { roleId: role_example }
+        "400": { $ref: "#/components/responses/RolesInvalidRequest" }
+        "401": { $ref: "#/components/responses/RolesUnauthorized" }
+        "403": { $ref: "#/components/responses/RolesForbidden" }
+        "404": { $ref: "#/components/responses/RolesNotFound" }
+        "409": { $ref: "#/components/responses/RolesConflict" }
+        "413": { $ref: "#/components/responses/RolesTooLarge" }
+        "500": { $ref: "#/components/responses/RolesFailed" }
+  /api/admin/users/{id}/permissions:
+    parameters:
+      - $ref: "#/components/parameters/RoleOrUserId"
+    get:
+      operationId: listEffectivePermissions
+      summary: 查看用户各项权限和生效原因
+      description: 按账号封禁、全站开关、个人例外、角色、默认规则依次判定。
+      tags: [用户授权]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200":
+          description: 用户角色和权限明细
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [roleId, permissions]
+                properties:
+                  roleId: { type: [string, "null"] }
+                  permissions:
+                    type: array
+                    items: { $ref: "#/components/schemas/EffectivePermission" }
+              example:
+                roleId: role_example
+                permissions:
+                  - key: project.submit
+                    featureEnabled: false
+                    roleRule: allow
+                    userOverride: inherit
+                    allowed: false
+                    source: feature_disabled
+                    reason: featureDisabled
+        "401": { $ref: "#/components/responses/RolesUnauthorized" }
+        "403": { $ref: "#/components/responses/RolesForbidden" }
+        "404": { $ref: "#/components/responses/RolesNotFound" }
+        "500": { $ref: "#/components/responses/RolesFailed" }
 components:
   securitySchemes:
     SiteSession:
@@ -732,7 +925,61 @@ components:
       in: cookie
       name: next-auth.csrf-token
       description: 与表单 csrfToken 配对。HTTPS 部署时使用带安全前缀的 Cookie。
+  parameters:
+    RoleOrUserId:
+      name: id
+      in: path
+      required: true
+      description: 路径对应的角色或站内用户 ID
+      schema: { type: string, minLength: 1, maxLength: 100, pattern: "^[a-zA-Z0-9_-]+$" }
+      example: example_id
   schemas:
+    Mode:
+      type: string
+      enum: [inherit, allow, deny]
+    RoleRules:
+      type: object
+      propertyNames:
+        enum:
+          [
+            post.submit,
+            project.submit,
+            photo.submit,
+            music.submit,
+            friend.submit,
+            comment.submit,
+            image.upload,
+            content.editOwn,
+            like.toggle,
+          ]
+      additionalProperties: { $ref: "#/components/schemas/Mode" }
+    Role:
+      type: object
+      required: [id, name, permissions, userCount, version]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        permissions: { $ref: "#/components/schemas/RoleRules" }
+        userCount: { type: integer, minimum: 0 }
+        version: { type: integer, minimum: 1 }
+    RoleAssignment:
+      type: object
+      required: [roleId]
+      properties:
+        roleId: { type: [string, "null"], description: null 表示解除分配 }
+    EffectivePermission:
+      type: object
+      required: [key, featureEnabled, roleRule, userOverride, allowed, source, reason]
+      properties:
+        key: { type: string }
+        featureEnabled: { type: boolean }
+        roleRule: { $ref: "#/components/schemas/Mode" }
+        userOverride: { $ref: "#/components/schemas/Mode" }
+        allowed: { type: boolean }
+        reason: { type: string, description: 站内国际化原因键 }
+        source:
+          type: string
+          enum: [account_banned, feature_disabled, user_override, role, default, owner]
     FeatureKey:
       type: string
       enum:
@@ -804,6 +1051,61 @@ components:
               json: { type: string, enum: ["true"] }
           example: { csrfToken: example-token, callbackUrl: /zh, json: "true" }
   responses:
+    RoleResult:
+      description: 角色详情
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Role" }
+          example:
+            {
+              id: role_example,
+              name: 图片贡献者,
+              permissions: { image.upload: allow },
+              userCount: 0,
+              version: 1,
+            }
+    RolesInvalidRequest:
+      description: 请求参数无效
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: roleInvalid }
+    RolesUnauthorized:
+      description: 未登录
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: loginRequired }
+    RolesForbidden:
+      description: 无站主管理权限
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: permissionDenied }
+    RolesNotFound:
+      description: 目标不存在
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: roleMissing }
+    RolesConflict:
+      description: 名称、版本、角色使用或分配冲突
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: roleConflict }
+    RolesTooLarge:
+      description: JSON 请求体超过 8 KiB
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: roleInvalid }
+    RolesFailed:
+      description: 服务暂不可用
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: roleRequestFailed }
     AuthRedirectJson:
       description: 表单提供 json=true 时返回浏览器跳转地址
       content:

@@ -1,3 +1,5 @@
+import { UserRoleForm } from "@/components";
+import { listRoles } from "@/server/services/roles";
 import { resolveAccountActor } from "@/server/access";
 import { notFound } from "next/navigation";
 import { ArticleAccessNotice, ArticleTime } from "@/components/server";
@@ -44,6 +46,7 @@ export default async function UserAccessPage({
   const { user, audit, operators } = data;
   const ownerGithubId = process.env.OWNER_GITHUB_ID;
   const account = await resolveAccountActor(getDb(), user, ownerGithubId);
+  const roles = await listRoles(getDb(), manager);
   const action = saveUserAccess.bind(null, locale, id);
   const bytes = new Intl.NumberFormat(locale, { style: "unit", unit: "byte" });
   const used = user.quota?.usedBytes ?? 0n;
@@ -63,6 +66,10 @@ export default async function UserAccessPage({
   const modeLabel = (effect: unknown) =>
     t(permissionModeLabels[isPermissionMode(effect) ? effect : "inherit"]);
   function auditValue(value: Prisma.JsonValue, actionName: string) {
+    if (actionName === "user.assignRole") {
+      const roleId = auditField(value, "roleId");
+      return typeof roleId === "string" ? roleId : t("roleNone");
+    }
     if (actionName === "user.updateBan") return statusLabel(auditField(value, "banned"));
     const mode = modeLabel(auditField(value, "effect"));
     if (actionName !== "media.updateUserAccess") return mode;
@@ -114,6 +121,15 @@ export default async function UserAccessPage({
           </LocaleLink>
         </section>
         <section className="panel draft-card">
+          <h2>{t("roleSettings")}</h2>
+          <p>{t("roleCurrent", { name: account.assignedRoleName ?? t("roleNone") })}</p>
+          {account.role === "OWNER" ? (
+            <p>{system("ownerAccountProtected")}</p>
+          ) : (
+            <UserRoleForm userId={user.id} currentRoleId={user.assignedRoleId} roles={roles} />
+          )}
+        </section>
+        <section className="panel draft-card">
           <h2>{t("userCapability")}</h2>
           <p>{t("userPermissionHelp")}</p>
           <div className="access-settings">
@@ -139,6 +155,11 @@ export default async function UserAccessPage({
                     {t(effective.allowed ? "permissionEffectiveAllow" : "permissionEffectiveDeny")}{" "}
                     · {system(effective.reason)}
                   </p>
+                  <p className="muted">
+                    {t("roleRuleLabel", {
+                      mode: t(permissionModeLabels[account.roleRules?.[capability] ?? "inherit"]),
+                    })}
+                  </p>
                   {capability === "image.upload" &&
                     effective.allowed &&
                     used + reserved >= limit && (
@@ -161,13 +182,15 @@ export default async function UserAccessPage({
                 const label =
                   item.action === "user.updateBan"
                     ? t("userStatus")
-                    : item.action === "media.updateUserAccess"
-                      ? t("mediaSettings")
-                      : t(
-                          isEditableCapability(capability)
-                            ? capabilityLabels[capability]
-                            : "userCapability",
-                        );
+                    : item.action === "user.assignRole"
+                      ? t("roleSettings")
+                      : item.action === "media.updateUserAccess"
+                        ? t("mediaSettings")
+                        : t(
+                            isEditableCapability(capability)
+                              ? capabilityLabels[capability]
+                              : "userCapability",
+                          );
                 return (
                   <li key={item.id}>
                     <p>

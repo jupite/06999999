@@ -21,6 +21,7 @@ const labels = {
   photo: "photoReviews",
   friend: "friendReviews",
   feature: "featureSettings",
+  role: "roleSettings",
 } as const;
 export default async function AuditPage({
   searchParams,

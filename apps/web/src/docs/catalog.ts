@@ -1,4 +1,5 @@
 export const functionDocs = [
+  { slug: "role-presets", file: "role-presets.md", title: "roleSettings" },
   { slug: "feature-controls", file: "feature-controls.md", title: "featureSettings" },
   { slug: "friend-links", file: "friend-links.md", title: "friends" },
   { slug: "photo-publishing", file: "photo-publishing.md", title: "photos" },

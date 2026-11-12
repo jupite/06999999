@@ -1,3 +1,4 @@
+import { listRoles } from "@/server/services/roles";
 import styles from "@/components/admin-shell/admin.module.css";
 import { ArticleAccessNotice, ArticlePagination } from "@/components/server";
 import { LocaleLink } from "@/i18n/link";
@@ -21,6 +22,7 @@ export default async function UsersPage({
     status?: string;
     capability?: string;
     effect?: string;
+    roleId?: string;
   }>;
 }) {
   const { locale, t, system } = await getI18n();
@@ -38,18 +40,25 @@ export default async function UsersPage({
       : undefined;
   const capability = isEditableCapability(query.capability) ? query.capability : undefined;
   const effect = query.effect === "ALLOW" || query.effect === "DENY" ? query.effect : undefined;
+  const roleId =
+    typeof query.roleId === "string" && /^[A-Za-z0-9_-]{1,100}$/.test(query.roleId)
+      ? query.roleId
+      : undefined;
+  const roles = await listRoles(getDb(), actor);
   const users = await listUserAccounts(getDb(), actor, {
     page,
     search,
     status,
     capability,
     effect,
+    roleId,
   });
   const filters = new URLSearchParams();
   if (search) filters.set("search", search);
   if (status) filters.set("status", status);
   if (capability) filters.set("capability", capability);
   if (effect) filters.set("effect", effect);
+  if (roleId) filters.set("roleId", roleId);
   const bytes = new Intl.NumberFormat(locale, { style: "unit", unit: "byte" });
 
   return (
@@ -65,6 +74,21 @@ export default async function UsersPage({
         className="panel draft-card article-filter-form"
       >
         <div className="article-taxonomy-fields">
+          <label className="draft-title">
+            {t("userAssignedRole")}
+            <select name="roleId" defaultValue={roleId ?? ""}>
+              <option value="">{t("roleAll")}</option>
+              <option value="none">{t("roleNone")}</option>
+              {roleId && roleId !== "none" && !roles.some((role) => role.id === roleId) && (
+                <option value={roleId}>{t("articleFilterUnavailable")}</option>
+              )}
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="draft-title">
             {t("searchUsers")}
             <input name="search" maxLength={100} defaultValue={search} />
@@ -122,6 +146,7 @@ export default async function UsersPage({
                 <tr>
                   <th scope="col">{t("userAccount")}</th>
                   <th scope="col">{t("userStatus")}</th>
+                  <th scope="col">{t("userAssignedRole")}</th>
                   <th scope="col">{t("customPermissions")}</th>
                   <th scope="col">{t("userStorage")}</th>
                   <th scope="col">{t("userActions")}</th>
@@ -140,6 +165,15 @@ export default async function UsersPage({
                       </small>
                     </td>
                     <td>{t(user.banned ? "bannedUser" : "activeUser")}</td>
+                    <td>
+                      {user.assignedRole ? (
+                        <LocaleLink href={`/admin/roles/${user.assignedRole.id}`}>
+                          {user.assignedRole.name}
+                        </LocaleLink>
+                      ) : (
+                        t("roleNone")
+                      )}
+                    </td>
                     <td>
                       {user.permissions.length
                         ? t("userPermissionCounts", {

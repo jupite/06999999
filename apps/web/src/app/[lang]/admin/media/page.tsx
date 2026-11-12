@@ -1,3 +1,4 @@
+import { resolveAccountActor } from "@/server/access";
 import { ArticleAccessNotice } from "@/components/server";
 import { LocaleLink } from "@/i18n/link";
 import { localePath } from "@/i18n/routing";
@@ -44,11 +45,9 @@ export default async function MediaSettingsPage({
     });
   const mib = (value: bigint = 0n) => String(value / bytesPerMib);
   const effect = user?.permissions[0]?.effect;
-  const enabled =
-    effect === "ALLOW" ||
-    (!effect &&
-      (githubId === process.env.OWNER_GITHUB_ID ||
-        (user?.githubId.startsWith("local:") && user.role === "OWNER")));
+  const effectiveUpload = user
+    ? authorize(await resolveAccountActor(db, user, process.env.OWNER_GITHUB_ID), "image.upload")
+    : null;
   const result = query.result;
   const error =
     result === "invalidMediaQuota" ||
@@ -131,15 +130,29 @@ export default async function MediaSettingsPage({
               <input type="hidden" name="scope" value="user" />
               <input type="hidden" name="githubId" value={user.githubId} />
               <h3>{user.name}</h3>
+              {effectiveUpload && (
+                <p>
+                  {t(
+                    effectiveUpload.allowed
+                      ? "permissionEffectiveAllow"
+                      : "permissionEffectiveDeny",
+                  )}{" "}
+                  · {system(effectiveUpload.reason)}
+                </p>
+              )}
               <p>
                 {usage(
                   (user.quota?.usedBytes ?? 0n) + (user.quota?.reservedBytes ?? 0n),
                   user.quota?.limitBytes ?? 0n,
                 )}
               </p>
-              <label>
-                <input name="enabled" type="checkbox" defaultChecked={enabled} />{" "}
+              <label className="draft-title">
                 {t("enableImageUpload")}
+                <select name="permissionMode" defaultValue={effect ?? "inherit"}>
+                  <option value="inherit">{t("permissionInherit")}</option>
+                  <option value="ALLOW">{t("permissionAllow")}</option>
+                  <option value="DENY">{t("permissionDeny")}</option>
+                </select>
               </label>
               <label className="draft-title">
                 {t("userMediaLimit")}

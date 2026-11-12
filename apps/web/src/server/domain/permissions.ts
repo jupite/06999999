@@ -34,6 +34,9 @@ export type Actor = {
   banned: boolean;
   overrides: Partial<Record<Capability, "ALLOW" | "DENY">>;
   features?: Partial<Record<Capability, boolean>>;
+  roleRules?: Partial<Record<Capability, "ALLOW" | "DENY">>;
+  assignedRoleId?: string | null;
+  assignedRoleName?: string | null;
 };
 
 export function accountActor(
@@ -84,6 +87,10 @@ export function authorize(
   if (actor.role === "OWNER") return { allowed: true, reason: "ownerPermission" };
   if (actor.overrides[capability] === "ALLOW")
     return { allowed: true, reason: "permissionGranted" };
+  if (actor.roleRules?.[capability] === "DENY")
+    return { allowed: false, reason: "rolePermissionDenied" };
+  if (actor.roleRules?.[capability] === "ALLOW")
+    return { allowed: true, reason: "rolePermissionGranted" };
   if (capability === "image.upload") return { allowed: false, reason: "imagePermissionRequired" };
   return { allowed: true, reason: "memberPermission" };
 }
