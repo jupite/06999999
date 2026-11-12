@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import {
   ArrowUpRight,
+  History,
   BookOpen,
   ChevronRight,
   FileText,
@@ -41,6 +42,7 @@ const groups = [
     links: [
       { href: "/admin/reviews", label: "articleReview", icon: ShieldCheck },
       { href: "/admin/project-reviews", label: "projectReviews", icon: FolderKanban },
+      { href: "/admin/audit", label: "auditTitle", icon: History },
       { href: "/admin/users", label: "userAccessManagement", icon: Users },
       { href: "/admin/media", label: "previewMedia", icon: Image },
       { href: "/admin/project-sites", label: "projectWebsiteRules", icon: SlidersHorizontal },

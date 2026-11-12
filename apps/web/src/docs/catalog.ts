@@ -1,4 +1,6 @@
 export const functionDocs = [
+  { slug: "admin-audit", file: "admin-audit.md", title: "auditTitle" },
+  { slug: "password-login", file: "password-login.md", title: "passwordSignIn" },
   { slug: "publishing-rules", file: "publishing-rules.md", title: "docsPublishingRules" },
   { slug: "permission-system", file: "permission-system.md", title: "docsPermissions" },
   { slug: "article-publishing", file: "article-publishing.md", title: "docsArticlePublishing" },

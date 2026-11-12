@@ -17,6 +17,7 @@
 - [文章草稿、发布与审核](./article-publishing.md)说明编辑、投稿、审核、分类标签及验证步骤。
 - [文章图片上传](./article-images.md)说明上传权限、存储配置、配额与审核流程。
 - [项目卡片发布](./project-publishing.md)说明投稿、网址校验、审核和公开展示。
+- [后台操作记录](./admin-audit.md)说明审计查询、筛选和权限。
 - [用户权限管理](./permission-system.md)说明角色、名单、权限优先级和后台操作。
 - [音乐播放器](./music-player.md)说明网易云接入、曲目管理、歌词和悬浮播放。
 - [发布权限与交互规划](./publishing-rules.md)汇总各栏目的发布规则和待确认交互。
