@@ -18,6 +18,7 @@
   position: sticky;
   top: 0;
   height: 100dvh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding: 30px 18px 20px;
@@ -44,11 +45,12 @@
   font-weight: 400;
   color: var(--muted);
 }
-.sidebar nav {
+.sidebar nav,
+.navGroup {
   display: grid;
   gap: 5px;
 }
-.sidebar nav > a {
+.sidebar nav a:not(.sidebarNote) {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -57,11 +59,11 @@
   border-radius: 9px;
   color: #b8afc7;
 }
-.sidebar nav > a:hover {
+.sidebar nav a:not(.sidebarNote):hover {
   background: #ffffff06;
   color: var(--text);
 }
-.sidebar nav > a.active {
+.sidebar nav a.active {
   color: #d8c6ff;
   background: linear-gradient(90deg, #7855c540, #7855c518);
   box-shadow: inset 3px 0 var(--accent);
@@ -347,6 +349,11 @@
   margin-top: 4px;
   font-size: 10px;
   color: #8f839e;
+}
+.pendingTitle {
+  max-width: 260px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .tableWrap tr:hover td {
   background: #b49aef05;
