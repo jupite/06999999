@@ -1,4 +1,5 @@
 export { SignOutButton } from "./account-menu";
+export { AdminPreview } from "./admin-preview";
 export {
   CopyRejectedButton,
   DeletePublishedArticleButton,

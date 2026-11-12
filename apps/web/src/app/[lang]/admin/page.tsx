@@ -20,6 +20,9 @@ export default async function AdminPage() {
   return (
     <section className="panel empty-state">
       <h1>{t("admin")}</h1>
+      <LocaleLink className="button secondary" href="/admin/preview">
+        {t("previewStyleTitle")}
+      </LocaleLink>
       <LocaleLink className="button" href="/admin/reviews">
         {t("articleReview")}
       </LocaleLink>
