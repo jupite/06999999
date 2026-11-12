@@ -5,16 +5,29 @@ import { articleLike, type ArticleLikeState } from "@/api";
 import { useI18n } from "@/i18n/client";
 import { LocaleLink } from "@/i18n/link";
 import type { SystemKey } from "@/i18n/messages";
-export function ArticleLike({ slug }: { slug: string }) {
+export function ArticleLike({
+  slug,
+  content = "articles",
+  initialState,
+}: {
+  slug: string;
+  content?: "articles" | "projects";
+  initialState?: ArticleLikeState;
+}) {
   const { t, notice } = useI18n();
-  const [state, setState] = useState<ArticleLikeState | null>(null);
+  const [state, setState] = useState<ArticleLikeState | null>(initialState ?? null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<SystemKey | null>(null);
   useEffect(() => {
+    if (initialState) {
+      setState(initialState);
+      setError(null);
+      return;
+    }
     const controller = new AbortController();
     setState(null);
     setError(null);
-    articleLike(slug, "GET", controller.signal)
+    articleLike(slug, "GET", controller.signal, content)
       .then((result) => {
         if ("error" in result) setError(result.error);
         else setState(result);
@@ -23,13 +36,13 @@ export function ArticleLike({ slug }: { slug: string }) {
         if (!controller.signal.aborted) setError("likeRequestFailed");
       });
     return () => controller.abort();
-  }, [slug]);
+  }, [slug, content, initialState]);
   async function toggle() {
     if (!state || pending) return;
     setPending(true);
     setError(null);
     try {
-      const result = await articleLike(slug, state.liked ? "DELETE" : "PUT");
+      const result = await articleLike(slug, state.liked ? "DELETE" : "PUT", undefined, content);
       if ("error" in result) setError(result.error);
       else setState(result);
     } catch {

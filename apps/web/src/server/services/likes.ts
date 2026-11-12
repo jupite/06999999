@@ -13,14 +13,17 @@ export class LikeError extends Error {
   }
 }
 type Db = Prisma.TransactionClient;
-async function publication(db: Db, slug: string, lock = false) {
+export type LikeKind = "POST" | "PROJECT";
+export const likeMissingKey = (kind: LikeKind) =>
+  kind === "POST" ? "likeArticleMissing" : "likeProjectMissing";
+async function publication(db: Db, reference: string, lock = false, kind: LikeKind = "POST") {
   const rows = await db.$queryRaw<{ id: string }[]>(Prisma.sql`
     SELECT c.id FROM "Content" c JOIN "ContentRevision" r ON r."contentId"=c.id
       AND r.version=c."publishedVersion" AND r.state='PUBLISHED'
-    WHERE c.slug=${slug} AND c.kind='POST'
+    WHERE ${kind === "POST" ? Prisma.sql`c.slug=${reference}` : Prisma.sql`c.id=${reference}`} AND c.kind=${kind}::"ContentKind"
     ${lock ? Prisma.sql`FOR SHARE OF c` : Prisma.empty}
   `);
-  if (!rows[0]) throw new LikeError("likeArticleMissing", 404);
+  if (!rows[0]) throw new LikeError(likeMissingKey(kind), 404);
   return rows[0].id;
 }
 async function state(db: Db, contentId: string, userId?: string) {
@@ -30,14 +33,20 @@ async function state(db: Db, contentId: string, userId?: string) {
   `;
   return { count: Number(result.count), liked: result.liked };
 }
-export async function readArticleLike(db: Db, actor: Actor | null, slug: string) {
-  return state(db, await publication(db, slug), actor?.id);
+export async function readContentLike(
+  db: Db,
+  actor: Actor | null,
+  reference: string,
+  kind: LikeKind = "POST",
+) {
+  return state(db, await publication(db, reference, false, kind), actor?.id);
 }
-export async function setArticleLike(
+export async function setContentLike(
   db: PrismaClient,
   actor: Actor | null,
-  slug: string,
+  reference: string,
   liked: boolean,
+  kind: LikeKind = "POST",
 ) {
   if (!actor) throw new LikeError("loginRequired", 401);
   return db.$transaction(async (tx) => {
@@ -49,10 +58,23 @@ export async function setArticleLike(
     if (!user) throw new LikeError("loginRequired", 401);
     const access = authorize(accountActor(user, process.env.OWNER_GITHUB_ID), "like.toggle");
     if (!access.allowed) throw new LikeError(access.reason, 403);
-    const contentId = await publication(tx, slug, true);
+    const contentId = await publication(tx, reference, true, kind);
     if (liked)
       await tx.like.createMany({ data: [{ userId: actor.id, contentId }], skipDuplicates: true });
     else await tx.like.deleteMany({ where: { userId: actor.id, contentId } });
     return state(tx, contentId, actor.id);
   });
+}
+
+export { readContentLike as readArticleLike, setContentLike as setArticleLike };
+export async function readProjectLikes(db: Db, actor: Actor | null, ids: string[]) {
+  if (!ids.length) return new Map<string, { count: number; liked: boolean }>();
+  const rows = await db.$queryRaw<{ id: string; count: bigint; liked: boolean }[]>(Prisma.sql`
+    SELECT c.id, (SELECT count(*) FROM "Like" l WHERE l."contentId"=c.id) AS count,
+      EXISTS(SELECT 1 FROM "Like" l WHERE l."contentId"=c.id AND l."userId"=${actor?.id ?? ""}) AS liked
+    FROM "Content" c JOIN "ContentRevision" r ON r."contentId"=c.id
+      AND r.version=c."publishedVersion" AND r.state='PUBLISHED'
+    WHERE c.id IN (${Prisma.join(ids)}) AND c.kind='PROJECT'
+  `);
+  return new Map(rows.map((row) => [row.id, { count: Number(row.count), liked: row.liked }]));
 }

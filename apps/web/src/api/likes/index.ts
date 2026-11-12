@@ -4,8 +4,9 @@ export async function articleLike(
   slug: string,
   method: "GET" | "PUT" | "DELETE" = "GET",
   signal?: AbortSignal,
+  content: "articles" | "projects" = "articles",
 ): Promise<ArticleLikeState | { error: SystemKey }> {
-  const response = await fetch(`/api/articles/${encodeURIComponent(slug)}/like`, {
+  const response = await fetch(`/api/${content}/${encodeURIComponent(slug)}/like`, {
     method,
     cache: "no-store",
     signal,
@@ -19,7 +20,9 @@ export async function articleLike(
           : response.status === 403
             ? "permissionDenied"
             : response.status === 404
-              ? "likeArticleMissing"
+              ? content === "articles"
+                ? "likeArticleMissing"
+                : "likeProjectMissing"
               : "likeRequestFailed",
     };
   if (!Number.isSafeInteger(result.count) || result.count < 0 || typeof result.liked !== "boolean")

@@ -372,6 +372,112 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
               example: { error: likeRequestFailed }
+  /api/projects/{id}/like:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: 公开项目的站内 ID
+        schema: { type: string, minLength: 1, maxLength: 200 }
+    get:
+      operationId: getProjectLike
+      summary: 查看项目点赞数量及当前账号状态
+      description: 访客可查看数量；登录后返回本人的点赞状态。
+      tags: [点赞]
+      security: [{}, { SiteSession: [] }]
+      responses:
+        "200":
+          description: 当前点赞状态
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArticleLike" }
+              example: { count: 1, liked: true }
+        "404":
+          description: 项目不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeProjectMissing }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeRequestFailed }
+    put:
+      operationId: likeProject
+      summary: 点赞项目（重复请求不增加数量）
+      description: 要求同源请求及 like.toggle 权限。仅允许操作已公开项目，无需审核。
+      tags: [点赞]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200":
+          description: 当前点赞状态
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArticleLike" }
+              example: { count: 1, liked: true }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 权限不足或非同源请求
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: permissionDenied }
+        "404":
+          description: 项目不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeProjectMissing }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeRequestFailed }
+    delete:
+      operationId: unlikeProject
+      summary: 取消点赞（重复请求不重复扣减）
+      description: 要求同源请求及 like.toggle 权限。仅允许操作已公开项目，无需审核。
+      tags: [点赞]
+      security: [{ SiteSession: [] }]
+      responses:
+        "200":
+          description: 当前点赞状态
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArticleLike" }
+              example: { count: 1, liked: true }
+        "401":
+          description: 未登录
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: loginRequired }
+        "403":
+          description: 权限不足或非同源请求
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: permissionDenied }
+        "404":
+          description: 项目不存在或未公开
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeProjectMissing }
+        "500":
+          description: 服务暂不可用
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: likeRequestFailed }
 components:
   securitySchemes:
     SiteSession:

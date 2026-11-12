@@ -481,6 +481,7 @@
     "authorCannotPublish": "The author cannot publish right now. {reason} You can reject this submission and explain why."
   },
   "system": {
+    "likeProjectMissing": "Project is unavailable or unpublished",
     "likeArticleMissing": "Article is unavailable or unpublished",
     "likeRequestFailed": "Likes are unavailable. Refresh to try again.",
     "loginRequired": "Please sign in.",

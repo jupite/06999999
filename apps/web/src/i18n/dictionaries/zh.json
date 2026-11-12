@@ -481,6 +481,7 @@
     "authorCannotPublish": "作者当前不能发布：{reason}。可填写原因拒绝该投稿。"
   },
   "system": {
+    "likeProjectMissing": "项目不存在或尚未公开",
     "likeArticleMissing": "文章不存在或尚未公开",
     "likeRequestFailed": "点赞状态暂时无法加载，请刷新重试",
     "loginRequired": "请先登录",
